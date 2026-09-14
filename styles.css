@@ -63,3 +63,24 @@ html[dir="ltr"] .offers h2,html[dir="ltr"] .closing h2{font-size:clamp(36px,4.5v
 @media(max-width:1050px){.contact-layout{grid-template-columns:1fr 1fr}.contact-locations{grid-column:1/-1}.location-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.location-list li{align-items:flex-start;border-bottom:0}}
 @media(max-width:650px){.contact-footer{padding:42px 20px 20px}.contact-layout{grid-template-columns:1fr;gap:32px}.contact-locations{grid-column:auto}.contact-footer .contact-tagline{max-width:none}.location-list{display:block}.location-list li{align-items:center;border-bottom:1px solid #47706e}.contact-bottom{margin-top:30px}.contact-details h2{margin-bottom:18px}}
 @media(prefers-reduced-motion:reduce){.contact-footer a{transition:none}.contact-footer a:hover{transform:none}}
+
+/* Each source photo has a small cup on the left and a large cup on the right.
+   Clip exactly one half without rescaling the cups relative to each other. */
+.menu-grid.hot-drink-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.hot-drink-card{min-width:0;display:flex;flex-direction:column}
+.hot-drink-image{position:relative;aspect-ratio:1;overflow:hidden;background:#ffe299;direction:ltr}
+.hot-drink-image img{position:absolute;top:0;left:0;width:200%;height:100%;max-width:none;object-fit:fill}
+.hot-drink-image[data-size="large"] img{left:-100%}
+.hot-drink-card:hover img{transform:none}
+.hot-drink-card .feature-info{flex:1;align-items:flex-start;padding:18px 16px 12px}
+.hot-drink-card h3{text-align:start;line-height:1.4}
+.drink-sizes{display:flex;gap:6px;margin:0 16px 16px;padding:4px;border-radius:24px;background:#f2f5ef}
+.drink-sizes button{flex:1;min-height:40px;padding:8px 12px;border:0;border-radius:20px;background:transparent;color:var(--dark);font-weight:800;cursor:pointer}
+.drink-sizes button[aria-pressed="true"]{background:var(--dark);color:white}
+.drink-sizes button:focus-visible{outline:3px solid #dc718d;outline-offset:3px}
+.drink-size-label{margin:0 16px 16px;min-height:48px;display:flex;align-items:center;gap:8px;color:#688182;font-size:14px;font-weight:700}
+.drink-size-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex:none}
+@media(max-width:1100px){.menu-grid.hot-drink-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.menu-grid.hot-drink-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.menu-grid.hot-drink-grid{gap:12px}.hot-drink-card .feature-info{padding:14px 12px 10px}.drink-sizes{margin:0 10px 12px}.drink-sizes button{padding:8px;font-size:14px}}
+@media(max-width:360px){.menu-grid.hot-drink-grid{grid-template-columns:1fr}}
