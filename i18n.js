@@ -1,5 +1,17 @@
 // Natural-language keys preserve the original Arabic copy and inline markup.
 const englishTranslations = {
+  'دونات طازجة بنكهات وأشكال متنوعة تُعد يوميًا بحب وإبداع.': 'Fresh donuts in a variety of flavors and shapes, made daily with love and creativity.',
+  'تابعنا على مواقع التواصل': 'Follow us on social media',
+  'فيسبوك — يفتح في نافذة جديدة': 'Facebook — opens in a new tab',
+  'إنستغرام — يفتح في نافذة جديدة': 'Instagram — opens in a new tab',
+  'خلّينا على تواصل': 'Stay in touch',
+  'تواصل معنا وفروعنا': 'Contact & Locations',
+  'احكي معنا': 'Give us a call',
+  'لاقينا قريب منك': 'Find your nearest stop',
+  'الطيرة، خلف سرية رام الله.': 'Al-Tireh, behind Sareyyet Ramallah.',
+  'ايكون مول، الطابق الأرضي.': 'Icon Mall, ground floor.',
+  'نابلس - شارع الأكاديمية -': 'Nablus — Academy Street —',
+
   'The Donut Stop | ذا دونات ستوب': 'The Donut Stop | Donuts & Coffee',
   'ذا دونات ستوب — دونات ومشروبات لكل لحظة حلوة.': 'The Donut Stop — donuts and drinks for every sweet moment.',
   'ذا دونات ستوب - الرئيسية': 'The Donut Stop — Home',

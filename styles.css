@@ -13,3 +13,53 @@ html[dir="ltr"] .feature-info h3,html[dir="ltr"] .menu-item h3{text-align:left}
 html[dir="ltr"] .offers h2,html[dir="ltr"] .closing h2{font-size:clamp(36px,4.5vw,68px)}
 @media(max-width:1100px){.site-header{gap:12px}.site-header nav{gap:18px}.header-actions{gap:8px}}
 @media(max-width:650px){.header-actions{gap:7px}.language-switch{padding:9px 11px;font-size:13px}.site-header{padding-inline:16px;gap:8px}.brand span{display:none}html[dir="ltr"] .hero-copy{padding:58px 24px 25px}html[dir="ltr"] .hero h1{font-size:clamp(45px,11vw,65px)}html[dir="ltr"] .hero-actions{flex-wrap:wrap}.section-heading{flex-wrap:wrap}}
+
+/* Full donut menu follows the featured product cards. */
+.menu-grid.donut-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.donut-card{display:flex;flex-direction:column;min-width:0}
+.donut-card .feature-image{height:auto;aspect-ratio:1.42}
+.donut-card .feature-image img{width:75%;height:85%;max-height:240px}
+.donut-card .feature-info{flex:1;align-items:flex-start;gap:12px}
+.donut-card .feature-info>div{min-width:0}
+.donut-card .feature-info h3{text-align:start;line-height:1.35}
+.donut-card .feature-info p{font-size:15px;line-height:1.5}
+.donut-card .feature-info strong{flex-shrink:0}
+.offer-card .offer-formula{display:flex;align-items:baseline;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'DM Sans',sans-serif}
+.offer-card .offer-formula small{display:inline;font-size:.5em}
+@media(max-width:1100px){.menu-grid.donut-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.menu-grid.donut-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.menu-grid.donut-grid{gap:12px}.donut-card .feature-info{flex-direction:row;flex-wrap:wrap;padding:14px;gap:8px}.donut-card .feature-info>div{flex:1 1 100%}.donut-card .feature-info p{font-size:14px}.donut-card .feature-image img{width:80%}.offer-card .offer-formula{gap:6px;font-size:clamp(22px,5vw,30px)}}
+@media(max-width:360px){.menu-grid.donut-grid{grid-template-columns:1fr}}
+
+/* Contact and locations: a warm, accessible closing stop. */
+.contact-footer{display:block;padding:64px max(5vw,24px) 24px;background:#123f43;color:#fffaf0;border-top:6px solid #ffd76a}
+.contact-layout{display:grid;grid-template-columns:1fr 1fr 1.15fr;gap:clamp(28px,4vw,64px);align-items:start}
+.contact-footer .footer-brand{display:inline-flex;font-size:16px;letter-spacing:.06em}
+.contact-footer .footer-brand img{width:52px!important;height:52px!important}
+.contact-footer .contact-tagline{display:block;margin:20px 0 24px;max-width:340px;color:#d5e5df;font-size:17px;line-height:1.85}
+.social-links{display:flex;gap:12px}
+.social-links a{width:46px;height:46px;display:grid;place-items:center;border:1px solid #759895;border-radius:50%;color:#fffaf0;transition:background .2s,color .2s,transform .2s,border-color .2s}
+.social-links svg{width:23px;height:23px}
+.social-links a:hover{transform:translateY(-3px);background:#ffa0b8;color:#123f43;border-color:#ffa0b8}
+.contact-details .eyebrow{color:#ffa0b8;font-size:14px}
+.contact-details h2{font-size:clamp(25px,2.4vw,34px);line-height:1.3;margin:10px 0 24px;letter-spacing:-.03em}
+.contact-phone{display:flex;gap:14px;align-items:center;padding:17px;border-radius:18px;background:#1d5053;transition:background .2s,transform .2s}
+.contact-phone:hover{background:#286367;transform:translateY(-2px)}
+.contact-icon{display:grid;place-items:center;width:42px;height:42px;flex:none;border-radius:50%;background:#ffd76a;color:#123f43}
+.contact-icon svg{width:23px;height:23px}
+.contact-label{display:block;font-size:14px;color:#d5e5df;margin-bottom:5px}
+.contact-phone bdi{display:block;font-family:'DM Sans',sans-serif;font-size:21px;font-weight:700;white-space:nowrap}
+.contact-arrow{margin-inline-start:auto;color:#ffa0b8;font-size:24px}
+.contact-locations h3{font-size:20px;margin:0 0 15px}
+.location-list{list-style:none;padding:0;margin:0}
+.location-list li{display:flex;gap:13px;align-items:center;padding:14px 0;border-bottom:1px solid #47706e;font-size:16px;line-height:1.6}
+.location-list li:last-child{border-bottom:0}
+.location-icon{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:12px;background:#265558;color:#ffa0b8}
+.location-icon svg{width:21px;height:21px}
+.contact-bottom{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center;margin-top:42px;padding-top:22px;border-top:1px solid #47706e;color:#d5e5df;font-size:13px}
+.contact-bottom a{color:#fffaf0;padding:8px 0;transition:color .2s}
+.contact-bottom a:hover{color:#ffa0b8}
+.contact-footer a:focus-visible{outline:3px solid #ffd76a;outline-offset:5px}
+@media(max-width:1050px){.contact-layout{grid-template-columns:1fr 1fr}.contact-locations{grid-column:1/-1}.location-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}.location-list li{align-items:flex-start;border-bottom:0}}
+@media(max-width:650px){.contact-footer{padding:42px 20px 20px}.contact-layout{grid-template-columns:1fr;gap:32px}.contact-locations{grid-column:auto}.contact-footer .contact-tagline{max-width:none}.location-list{display:block}.location-list li{align-items:center;border-bottom:1px solid #47706e}.contact-bottom{margin-top:30px}.contact-details h2{margin-bottom:18px}}
+@media(prefers-reduced-motion:reduce){.contact-footer a{transition:none}.contact-footer a:hover{transform:none}}
