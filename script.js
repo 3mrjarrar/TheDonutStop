@@ -3,7 +3,7 @@ const menu = {
     ['Original Glaze',6,'01-original-glaze.png'],['Coconut Glaze',6,'02-coconut-glaze.png'],['Toasted Coconut Glaze',6,'03-toasted-coconut-glaze.png'],['Powdered Sugar',6,'04-powdered-sugar.png'],['Chocolate Dip',6,'05-chocolate-dip.png'],['Pistachio Dip',6,'06-pistachio-dip.png'],['White Chocolate Dip',6,'07-white-chocolate-dip.png'],['Lemon Dip',6,'08-lemon-dip.png'],['Twister',6,'09-twister.png'],['Nutella Filling',7,'14-nutella-filling.png'],['Boston Cream (Custard Filling)',7,'15-boston-cream-custard-filling.png'],['Lotus Filling',7,'16-lotus-filling.png'],['Caramel Filling',7,'17-caramel-filling.png'],['Oreo Filling',7,'18-oreo-filling.png'],['Lemon Cheesecake',7,'21-lemon-cheesecake.png'],['Ferrero Filling',7,'22-ferrero-filling.png'],['Kinder Bueno Filling',7,'25-kinder-bueno-filling.png'],['Marshmallow Filling',7,'26-marshmallow-filling.png'],['Cotton Candy Filling',7,'27-cotton-candy-filling.png'],['Butter Cookie Filling',7,'28-butter-cookies-filling.png'],['Long John (Custard Filling)',7,'29-long-john-custard-filling.png'],['Bounty Filling',7,'30-bounty-filling.png'],['Pistachio Filling',8,'13-pistachio-filling.png'],['Strawberry Filling',8,'19-strawberry-filling.png'],['Blueberry Filling',8,'20-blueberry-filling.png'],['Apple Fritter',8,'31-apple-fritter.png'],['Crème Brûlée Donut',8,'32-creme-brulee-donut.png'],['Dubai Donut',10,'10-dubai-donut.png'],['Tiramisu Filling',10,'11-tiramisu-filling.png'],['Pecan Donut',10,'12-pecan-donut.png'],['Mini Donut Bites',20,'33-mini-donut-bites.png']
   ],
   hot: [['Americano','S 10 / L 12'],['Cappuccino','S 10 / L 12'],['Flat White',12],['Latte',12],['Mocha',14],['White Mocha',14],['Hot Chocolate',14],['Marshmallow Hot Chocolate',14],['Chai Latte',14],['French Vanilla',14],['Hot Hazelnut',14],['Hot Lotus',14],['Hot Spanish Latte',14],['Hot Salted Caramel',14],['Sahlab',14],['Pumpkin Spice Latte',14],['Espresso','S 8 / L 10'],['Ristretto',7],['Lungo',7],['Doppio',10]],
-  cold: [['Iced Coffee','S 14 / L 16'],['Iced Coffee Diet','S 14 / L 16'],['Iced Cappuccino',15],['Iced Latte',15],['Iced Americano',12],['Iced Spanish Latte',15],['Iced Vanilla',15],['Iced Chocolate',15],['Iced Tea',12],['Iced Lemon Mint',14],['Mojito',14]],
+  cold: [['Iced Coffee','S 14 / L 16'],['Iced Coffee Diet','S 14 / L 16'],['Iced Cappuccino',15],['Iced Latte',15],['Iced Americano',12],['Iced Spanish Latte',15],['Iced Vanilla',15],['Iced Chocolate',15],['Iced Tea',12],['Iced Lemon Mint',14],['Classic Mojito',14],['Strawberry Mojito',14],['Passion Fruit Mojito',14],['Blueberry Mojito',14],['Watermelon Mojito',14],['Bubble Gum Mojito',14],['Mango Mojito',14],['Mix Berries Mojito',14],['Pineapple Mojito',14],['Kiwi Mojito',14],['Green Apple Mojito',14],['Blue Curacao Mojito',14],['Strawberry Kiwi Mojito',14],['Mango Passion Mojito',14],['Berry Mix Mojito',14],['Tropical Mojito',14],['Blue Lagoon Mojito',14]],
   blends: [['Strawberry Smoothie',14],['Mango Smoothie',14],['Mix Berries Smoothie',14],['Blueberry Smoothie',14],['Pineapple Smoothie',14],['Passion Fruit Smoothie',14],['Watermelon Smoothie',14],['Vanilla Espresso Frappe',14],['Chocolate Espresso Frappe',16],['Caramel Espresso Frappe',16]]
 };
 
@@ -134,6 +134,157 @@ const donutDescriptions = {
   }
 };
 
+const coldDrinkDescriptions = {
+  "Iced Coffee": {
+    "ar": "قهوة باردة بالحليب والثلج",
+    "en": "Chilled coffee with milk and ice"
+  },
+  "Iced Coffee Diet": {
+    "ar": "قهوة باردة بنسخة دايت مع الثلج",
+    "en": "Diet iced coffee served over ice"
+  },
+  "Iced Cappuccino": {
+    "ar": "إسبريسو بارد بالحليب ورغوة ناعمة",
+    "en": "Iced espresso with milk and soft foam"
+  },
+  "Iced Latte": {
+    "ar": "إسبريسو وحليب بارد مع الثلج",
+    "en": "Espresso and cold milk over ice"
+  },
+  "Iced Americano": {
+    "ar": "إسبريسو مع الماء والثلج بطعم غني",
+    "en": "Espresso with water and ice"
+  },
+  "Iced Spanish Latte": {
+    "ar": "إسبريسو وحليب مكثّف لمذاق حلو وكريمي",
+    "en": "Espresso with sweet, creamy condensed milk"
+  },
+  "Iced Vanilla": {
+    "ar": "مشروب حليب بارد بنكهة الفانيلا",
+    "en": "A chilled milk drink with vanilla flavor"
+  },
+  "Iced Chocolate": {
+    "ar": "شوكولاتة وحليب بارد مع الثلج",
+    "en": "Chocolate and cold milk over ice"
+  },
+  "Iced Tea": {
+    "ar": "شاي بارد ومنعش مع الثلج",
+    "en": "Refreshing tea served over ice"
+  },
+  "Iced Lemon Mint": {
+    "ar": "ليمون منعش ممزوج بالنعناع والثلج",
+    "en": "Refreshing lemon blended with mint and ice"
+  },
+  "Classic Mojito": {
+    "ar": "ليمون ونعناع وصودا مع الثلج",
+    "en": "Lemon flavor with lemon, mint and soda"
+  },
+  "Strawberry Mojito": {
+    "ar": "موهيتو بنكهة الفراولة مع الليمون والنعناع والصودا",
+    "en": "Strawberry flavor with lemon, mint and soda"
+  },
+  "Passion Fruit Mojito": {
+    "ar": "موهيتو بنكهة الباشن فروت مع الليمون والنعناع والصودا",
+    "en": "Passion Fruit flavor with lemon, mint and soda"
+  },
+  "Blueberry Mojito": {
+    "ar": "موهيتو بنكهة التوت الأزرق مع الليمون والنعناع والصودا",
+    "en": "Blueberry flavor with lemon, mint and soda"
+  },
+  "Watermelon Mojito": {
+    "ar": "موهيتو بنكهة البطيخ مع الليمون والنعناع والصودا",
+    "en": "Watermelon flavor with lemon, mint and soda"
+  },
+  "Bubble Gum Mojito": {
+    "ar": "موهيتو بنكهة العلكة مع الليمون والنعناع والصودا",
+    "en": "Bubble Gum flavor with lemon, mint and soda"
+  },
+  "Mango Mojito": {
+    "ar": "موهيتو بنكهة المانجو مع الليمون والنعناع والصودا",
+    "en": "Mango flavor with lemon, mint and soda"
+  },
+  "Mix Berries Mojito": {
+    "ar": "موهيتو بنكهة التوت المشكّل مع الليمون والنعناع والصودا",
+    "en": "Mix Berries flavor with lemon, mint and soda"
+  },
+  "Pineapple Mojito": {
+    "ar": "موهيتو بنكهة الأناناس مع الليمون والنعناع والصودا",
+    "en": "Pineapple flavor with lemon, mint and soda"
+  },
+  "Kiwi Mojito": {
+    "ar": "موهيتو بنكهة الكيوي مع الليمون والنعناع والصودا",
+    "en": "Kiwi flavor with lemon, mint and soda"
+  },
+  "Green Apple Mojito": {
+    "ar": "موهيتو بنكهة التفاح الأخضر مع الليمون والنعناع والصودا",
+    "en": "Green Apple flavor with lemon, mint and soda"
+  },
+  "Blue Curacao Mojito": {
+    "ar": "بلو كوراكاو مع الليمون والنعناع والصودا",
+    "en": "Blue curacao with lemon, mint and soda"
+  },
+  "Strawberry Kiwi Mojito": {
+    "ar": "فراولة وكيوي مع الليمون والنعناع والصودا",
+    "en": "Strawberry and kiwi with lemon, mint and soda"
+  },
+  "Mango Passion Mojito": {
+    "ar": "مانجو وباشن فروت مع الليمون والنعناع والصودا",
+    "en": "Mango and passion fruit with lemon, mint and soda"
+  },
+  "Berry Mix Mojito": {
+    "ar": "فراولة وتوت أزرق ومشكّل مع الليمون والنعناع والصودا",
+    "en": "Strawberry, blueberry and mixed berries with lemon, mint and soda"
+  },
+  "Tropical Mojito": {
+    "ar": "مانجو وأناناس وباشن فروت مع الليمون والصودا",
+    "en": "Mango, pineapple and passion fruit with lemon and soda"
+  },
+  "Blue Lagoon Mojito": {
+    "ar": "بلو كوراكاو مع الليمون ونكهة اللايم والصودا",
+    "en": "Blue curacao with lemon, lime flavor and soda"
+  },
+  "Strawberry Smoothie": {
+    "ar": "سموذي مثلّج بنكهة الفراولة وقوام ناعم",
+    "en": "A smooth, frozen strawberry blend"
+  },
+  "Mango Smoothie": {
+    "ar": "سموذي مثلّج بنكهة المانجو وقوام ناعم",
+    "en": "A smooth, frozen mango blend"
+  },
+  "Mix Berries Smoothie": {
+    "ar": "سموذي مثلّج بنكهة التوت المشكّل وقوام ناعم",
+    "en": "A smooth, frozen mix berries blend"
+  },
+  "Blueberry Smoothie": {
+    "ar": "سموذي مثلّج بنكهة التوت الأزرق وقوام ناعم",
+    "en": "A smooth, frozen blueberry blend"
+  },
+  "Pineapple Smoothie": {
+    "ar": "سموذي مثلّج بنكهة الأناناس وقوام ناعم",
+    "en": "A smooth, frozen pineapple blend"
+  },
+  "Passion Fruit Smoothie": {
+    "ar": "سموذي مثلّج بنكهة الباشن فروت وقوام ناعم",
+    "en": "A smooth, frozen passion fruit blend"
+  },
+  "Watermelon Smoothie": {
+    "ar": "سموذي مثلّج بنكهة البطيخ وقوام ناعم",
+    "en": "A smooth, frozen watermelon blend"
+  },
+  "Vanilla Espresso Frappe": {
+    "ar": "إسبريسو مثلّج وممزوج بنكهة الفانيلا وقوام كريمي",
+    "en": "Blended frozen espresso with creamy vanilla flavor"
+  },
+  "Chocolate Espresso Frappe": {
+    "ar": "إسبريسو مثلّج وممزوج بنكهة الشوكولاتة وقوام كريمي",
+    "en": "Blended frozen espresso with creamy chocolate flavor"
+  },
+  "Caramel Espresso Frappe": {
+    "ar": "إسبريسو مثلّج وممزوج بنكهة الكراميل وقوام كريمي",
+    "en": "Blended frozen espresso with creamy caramel flavor"
+  }
+};
+
 const list = document.getElementById('menu-list');
 const tabs = [...document.querySelectorAll('.tab')];
 const hotDrinkSizes = new Map();
@@ -143,10 +294,11 @@ const smallCoffeeDescriptions = {
   Doppio: { ar: 'جرعة إسبريسو مزدوجة', en: 'A double shot of espresso' }
 };
 
-function createHotDrinkCard(name, price) {
+function createDrinkCard(name, price, category) {
+  const isHot = category === 'hot';
   const english = i18next.resolvedLanguage === 'en';
   const labels = english ? { small: 'Small', large: 'Large', size: 'Size' } : { small: 'صغير', large: 'كبير', size: 'الحجم' };
-  if (name === 'Espresso') {
+  if (isHot && name === 'Espresso') {
     labels.small = 'Single';
     labels.large = 'Double';
     labels.size = english ? 'Shots' : 'عدد الشوتات';
@@ -156,7 +308,7 @@ function createHotDrinkCard(name, price) {
   const visual = document.createElement('div');
   visual.className = 'hot-drink-image';
   const img = document.createElement('img');
-  img.src = `assets/hot-drinks/${encodeURIComponent(name)}.png`;
+  img.src = `assets/${isHot ? 'hot-drinks' : 'cold-drinks'}/${encodeURIComponent(name)}.png`;
   img.alt = '';
   img.loading = 'lazy';
   img.width = 1774;
@@ -168,10 +320,18 @@ function createHotDrinkCard(name, price) {
   title.textContent = name;
   const value = document.createElement('strong');
   value.dir = 'ltr';
-  info.append(title, value);
+  const copy = document.createElement('div');
+  copy.append(title);
+  if (!isHot) {
+    const description = document.createElement('p');
+    description.className = 'drink-description';
+    description.textContent = coldDrinkDescriptions[name][english ? 'en' : 'ar'];
+    copy.append(description);
+  }
+  info.append(copy, value);
   const prices = typeof price === 'string' ? price.match(/^S (\d+) \/ L (\d+)$/) : null;
   if (!prices) {
-    const description = smallCoffeeDescriptions[name];
+    const description = isHot ? smallCoffeeDescriptions[name] : null;
     const size = description ? 'small' : 'large';
     visual.dataset.size = size;
     img.alt = `${name} — ${labels[size]}`;
@@ -212,9 +372,9 @@ function createHotDrinkCard(name, price) {
 function showCategory(category) {
   const isDonuts = category === 'donuts';
   list.classList.toggle('donut-grid', isDonuts);
-  list.classList.toggle('hot-drink-grid', category === 'hot');
+  list.classList.toggle('hot-drink-grid', !isDonuts);
   const items = menu[category].map(([name, price, photo], index) => {
-    if (category === 'hot') return createHotDrinkCard(name, price);
+    if (!isDonuts) return createDrinkCard(name, price, category);
     if (isDonuts) {
       const card = document.createElement('article');
       card.className = 'feature-card donut-card';
@@ -261,7 +421,15 @@ function showCategory(category) {
     card.append(main, value);
     return card;
   });
-  if (category === 'blends') {
+  if (category === 'cold') {
+    const heading = label => {
+      const title = document.createElement('h3');
+      title.className = 'menu-group-heading';
+      title.textContent = i18next.t(label);
+      return title;
+    };
+    list.replaceChildren(heading('مشروبات باردة'), ...items.slice(0, 10), heading('نكهات الموهيتو'), ...items.slice(10, 21), heading('خلطات الموهيتو'), ...items.slice(21));
+  } else if (category === 'blends') {
     const frappeStart = menu.blends.findIndex(([name]) => name.includes('Frappe'));
     const heading = label => {
       const title = document.createElement('h3');

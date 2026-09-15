@@ -61,6 +61,8 @@ const englishTranslations = {
   'مشروبات ساخنة': 'Hot drinks',
   'مشروبات باردة': 'Cold drinks',
   'سموذي وفرابيه': 'Smoothies & frappes',
+  'نكهات الموهيتو': 'Mojito flavors',
+  'خلطات الموهيتو': 'Mojito mixes',
   'سموذي': 'Smoothies',
   'فرابيه': 'Frappes',
   'في كل لقمة،': 'In every bite,',
