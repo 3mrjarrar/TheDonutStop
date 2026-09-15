@@ -1,6 +1,6 @@
 const menu = {
   donuts: [
-    ['Original Glaze',6,'01-original-glaze.png'],['Coconut Glaze',6,'02-coconut-glaze.png'],['Toasted Coconut Glaze',6,'03-toasted-coconut-glaze.png'],['Powdered Sugar',6,'04-powdered-sugar.png'],['Chocolate Dip',6,'05-chocolate-dip.png'],['Pistachio Dip',6,'06-pistachio-dip.png'],['White Chocolate Dip',6,'07-white-chocolate-dip.png'],['Lemon Dip',6,'08-lemon-dip.png'],['Twister',6,'09-twister.png'],['Nutella Filling',7,'14-nutella-filling.png'],['Boston Cream (Custard Filling)',7,'15-boston-cream-custard-filling.png'],['Lotus Filling',7,'16-lotus-filling.png'],['Caramel Filling',7,'17-caramel-filling.png'],['Oreo Filling',7,'18-oreo-filling.png'],['Lemon Cheesecake',7,'21-lemon-cheesecake.png'],['Ferrero Filling',7,'22-ferrero-filling.png'],['Kinder Bueno Filling',7,'25-kinder-bueno-filling.png'],['Marshmallow Filling',7,'26-marshmallow-filling.png'],['Cotton Candy Filling',7,'27-cotton-candy-filling.png'],['Butter Cookie Filling',7,'28-butter-cookies-filling.png'],['Long John (Custard Filling)',7,'29-long-john-custard-filling.png'],['Bounty Filling',7,'30-bounty-filling.png'],['Pistachio Filling',8,'13-pistachio-filling.png'],['Strawberry Filling',8,'19-strawberry-filling.png'],['Blueberry Filling',8,'20-blueberry-filling.png'],['Apple Fritter',8,'31-apple-fritter.png'],['Crème Brûlée Donut',8,'32-creme-brulee-donut.png'],['Dubai Donut',10,'10-dubai-donut.png'],['Tiramisu Filling',10,'11-tiramisu-filling.png'],['Pecan Donut',10,'12-pecan-donut.png'],['Mini Donut Bites',20,'33-mini-donut-bites.png']
+    ['Original Glaze',6,'01-original-glaze.png'],['Coconut Glaze',6,'02-coconut-glaze.png'],['Toasted Coconut Glaze',6,'03-toasted-coconut-glaze.png'],['Powdered Sugar',6,'04-powdered-sugar.png'],['Chocolate Dip',6,'05-chocolate-dip.png'],['Pistachio Dip',6,'06-pistachio-dip.png'],['White Chocolate Dip',6,'07-white-chocolate-dip.png'],['Lemon Dip',6,'08-lemon-dip.png'],['Twister',6,'09-twister.png'],['Nutella Filling',7,'14-nutella-filling.png'],['Boston Cream (Custard Filling)',7,'15-boston-cream-custard-filling.png'],['Lotus Filling',7,'16-lotus-filling.png'],['Caramel Filling',7,'17-caramel-filling.png'],['Oreo Filling',7,'18-oreo-filling.png'],['Lemon Cheesecake',7,'21-lemon-cheesecake.png'],['Ferrero Filling',7,'22-ferrero-filling.png'],['Kinder Bueno Filling',7,'25-kinder-bueno-filling.png'],['Marshmallow Filling',7,'26-marshmallow-filling.png'],['Cotton Candy Filling',7,'27-cotton-candy-filling.png'],['Butter Cookie Filling',7,'28-butter-cookies-filling.png'],['Long John (Custard Filling)',7,'29-long-john-custard-filling.png'],['Bounty Filling',7,'30-bounty-filling.png'],['Pistachio Filling',8,'13-pistachio-filling.png'],['Strawberry Filling',8,'19-strawberry-filling.png'],['Blueberry Filling',8,'20-blueberry-filling.png'],['Apple Fritter',8,'31-apple-fritter.png'],['Crème Brûlée Donut',8,'32-creme-brulee-donut.png'],['Dubai Donut',10,'10-dubai-donut.png'],['Tiramisu Filling',10,'11-tiramisu-filling.png'],['Pecan Donut',10,'12-pecan-donut.png'],['Red Velvet with Cream Cheese',10,'34-red-velvet-cream-cheese.png'],['Blueberry Cheesecake',10,'35-blueberry-cheesecake.png'],['Strawberry Jam & Cream',10,'36-strawberry-jam-cream.png'],['Mini Donut Bites',20,'33-mini-donut-bites.png']
   ],
   hot: [['Americano','S 10 / L 12'],['Cappuccino','S 10 / L 12'],['Flat White',12],['Latte',12],['Mocha',14],['White Mocha',14],['Hot Chocolate',14],['Marshmallow Hot Chocolate',14],['Chai Latte',14],['French Vanilla',14],['Hot Hazelnut',14],['Hot Lotus',14],['Hot Spanish Latte',14],['Hot Salted Caramel',14],['Sahlab',14],['Pumpkin Spice Latte',14],['Espresso','S 8 / L 10'],['Ristretto',7],['Lungo',7],['Doppio',10]],
   cold: [['Iced Coffee','S 14 / L 16'],['Iced Coffee Diet','S 14 / L 16'],['Iced Cappuccino',15],['Iced Latte',15],['Iced Americano',12],['Iced Spanish Latte',15],['Iced Vanilla',15],['Iced Chocolate',15],['Iced Tea',12],['Iced Lemon Mint',14],['Classic Mojito',14],['Strawberry Mojito',14],['Passion Fruit Mojito',14],['Blueberry Mojito',14],['Watermelon Mojito',14],['Bubble Gum Mojito',14],['Mango Mojito',14],['Mix Berries Mojito',14],['Pineapple Mojito',14],['Kiwi Mojito',14],['Green Apple Mojito',14],['Blue Curacao Mojito',14],['Strawberry Kiwi Mojito',14],['Mango Passion Mojito',14],['Berry Mix Mojito',14],['Tropical Mojito',14],['Blue Lagoon Mojito',14]],
@@ -128,6 +128,18 @@ const donutDescriptions = {
     "ar": "دونات مع جوز البيكان",
     "en": "Topped with pecans"
   },
+  "Red Velvet with Cream Cheese": {
+    "ar": "دونات بكريم تشيز وفتات كيك الريد فيلفت",
+    "en": "Cream cheese icing topped with red velvet cake crumbs"
+  },
+  "Blueberry Cheesecake": {
+    "ar": "دونات بنكهة تشيزكيك التوت الأزرق وفتات البسكويت",
+    "en": "Blueberry cheesecake flavor topped with biscuit crumbs"
+  },
+  "Strawberry Jam & Cream": {
+    "ar": "دونات بمربّى الفراولة والكريمة وتغطية الفراولة",
+    "en": "Strawberry icing with strawberry jam and cream"
+  },
   "Mini Donut Bites": {
     "ar": "علبة ميني دونات بتغطيات متنوّعة",
     "en": "A box of mini bites with assorted toppings"
@@ -176,72 +188,72 @@ const coldDrinkDescriptions = {
     "en": "Refreshing lemon blended with mint and ice"
   },
   "Classic Mojito": {
-    "ar": "ليمون ونعناع وصودا مع الثلج",
-    "en": "Lemon flavor with lemon, mint and soda"
+    "ar": "ليمون ونعناع مع الثلج",
+    "en": "Lemon flavor with lemon and mint"
   },
   "Strawberry Mojito": {
-    "ar": "موهيتو بنكهة الفراولة مع الليمون والنعناع والصودا",
-    "en": "Strawberry flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة الفراولة مع الليمون والنعناع",
+    "en": "Strawberry flavor with lemon and mint"
   },
   "Passion Fruit Mojito": {
-    "ar": "موهيتو بنكهة الباشن فروت مع الليمون والنعناع والصودا",
-    "en": "Passion Fruit flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة الباشن فروت مع الليمون والنعناع",
+    "en": "Passion Fruit flavor with lemon and mint"
   },
   "Blueberry Mojito": {
-    "ar": "موهيتو بنكهة التوت الأزرق مع الليمون والنعناع والصودا",
-    "en": "Blueberry flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة التوت الأزرق مع الليمون والنعناع",
+    "en": "Blueberry flavor with lemon and mint"
   },
   "Watermelon Mojito": {
-    "ar": "موهيتو بنكهة البطيخ مع الليمون والنعناع والصودا",
-    "en": "Watermelon flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة البطيخ مع الليمون والنعناع",
+    "en": "Watermelon flavor with lemon and mint"
   },
   "Bubble Gum Mojito": {
-    "ar": "موهيتو بنكهة العلكة مع الليمون والنعناع والصودا",
-    "en": "Bubble Gum flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة العلكة مع الليمون والنعناع",
+    "en": "Bubble Gum flavor with lemon and mint"
   },
   "Mango Mojito": {
-    "ar": "موهيتو بنكهة المانجو مع الليمون والنعناع والصودا",
-    "en": "Mango flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة المانجو مع الليمون والنعناع",
+    "en": "Mango flavor with lemon and mint"
   },
   "Mix Berries Mojito": {
-    "ar": "موهيتو بنكهة التوت المشكّل مع الليمون والنعناع والصودا",
-    "en": "Mix Berries flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة التوت المشكّل مع الليمون والنعناع",
+    "en": "Mix Berries flavor with lemon and mint"
   },
   "Pineapple Mojito": {
-    "ar": "موهيتو بنكهة الأناناس مع الليمون والنعناع والصودا",
-    "en": "Pineapple flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة الأناناس مع الليمون والنعناع",
+    "en": "Pineapple flavor with lemon and mint"
   },
   "Kiwi Mojito": {
-    "ar": "موهيتو بنكهة الكيوي مع الليمون والنعناع والصودا",
-    "en": "Kiwi flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة الكيوي مع الليمون والنعناع",
+    "en": "Kiwi flavor with lemon and mint"
   },
   "Green Apple Mojito": {
-    "ar": "موهيتو بنكهة التفاح الأخضر مع الليمون والنعناع والصودا",
-    "en": "Green Apple flavor with lemon, mint and soda"
+    "ar": "موهيتو بنكهة التفاح الأخضر مع الليمون والنعناع",
+    "en": "Green Apple flavor with lemon and mint"
   },
   "Blue Curacao Mojito": {
-    "ar": "بلو كوراكاو مع الليمون والنعناع والصودا",
-    "en": "Blue curacao with lemon, mint and soda"
+    "ar": "بلو كوراساو مع الليمون والنعناع",
+    "en": "Blue curacao with lemon and mint"
   },
   "Strawberry Kiwi Mojito": {
-    "ar": "فراولة وكيوي مع الليمون والنعناع والصودا",
-    "en": "Strawberry and kiwi with lemon, mint and soda"
+    "ar": "فراولة وكيوي مع الليمون والنعناع",
+    "en": "Strawberry and kiwi with lemon and mint"
   },
   "Mango Passion Mojito": {
-    "ar": "مانجو وباشن فروت مع الليمون والنعناع والصودا",
-    "en": "Mango and passion fruit with lemon, mint and soda"
+    "ar": "مانجو وباشن فروت مع الليمون والنعناع",
+    "en": "Mango and passion fruit with lemon and mint"
   },
   "Berry Mix Mojito": {
-    "ar": "فراولة وتوت أزرق ومشكّل مع الليمون والنعناع والصودا",
-    "en": "Strawberry, blueberry and mixed berries with lemon, mint and soda"
+    "ar": "فراولة وتوت أزرق ومشكّل مع الليمون والنعناع",
+    "en": "Strawberry, blueberry and mixed berries with lemon and mint"
   },
   "Tropical Mojito": {
-    "ar": "مانجو وأناناس وباشن فروت مع الليمون والصودا",
-    "en": "Mango, pineapple and passion fruit with lemon and soda"
+    "ar": "مانجو وأناناس وباشن فروت مع الليمون",
+    "en": "Mango, pineapple and passion fruit with lemon"
   },
   "Blue Lagoon Mojito": {
-    "ar": "بلو كوراكاو مع الليمون ونكهة اللايم والصودا",
-    "en": "Blue curacao with lemon, lime flavor and soda"
+    "ar": "بلو كوراساو مع الليمون ونكهة اللايم",
+    "en": "Blue curacao with lemon and lime flavor"
   },
   "Strawberry Smoothie": {
     "ar": "سموذي مثلّج بنكهة الفراولة وقوام ناعم",
