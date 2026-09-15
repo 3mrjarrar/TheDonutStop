@@ -6,11 +6,9 @@ export default function Hero() {
   const { t } = useLanguage();
   return (<section className="hero" aria-labelledby="hero-title">
 <div className="hero-copy">
-<span className="eyebrow"><span className="sparkle">{t("✦")}</span> {t("لحظتك الحلوة بتبدأ هون")}</span>
 <h1 id="hero-title">{t("وقفة صغيرة.")}<br /><em>{t("فرحة كبيرة.")}</em></h1>
 <p>{t("دونات طازة بنكهات بتحبها، ومعها قهوتك المفضّلة. اختار اللي على مزاجك من ذا دونات ستوب.")}</p>
 <div className="hero-actions"><Link className="button button-dark" to="/menu">{t("اكتشف المنيو")} <span aria-hidden="true">{t("↖")}</span></Link><Link className="text-link" to="/#offers">{t("شوف العروض")} <span aria-hidden="true">{t("←")}</span></Link></div>
-<div className="hero-note"><span className="mini-icon" aria-hidden="true">{t("✳")}</span><span>{t("دونات من")} <strong>{t("6 ₪")}</strong> {t("· مشروبات ساخنة وباردة")}</span></div>
 </div>
 <div className="hero-visual" aria-label={t("مجموعة من أصناف الدونات")}>
 <div className="hero-blob"></div>
