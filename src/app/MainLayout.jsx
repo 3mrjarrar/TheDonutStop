@@ -17,7 +17,7 @@ export default function MainLayout() {
       if (!location.hash) document.getElementById('top')?.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [location.pathname, location.hash, navigate]);
+  }, [location.pathname, location.hash, location.key, navigate]);
   return <>
     <title>{missing ? '404 | The Donut Stop' : menu ? `${t('المنيو')} | The Donut Stop` : t('The Donut Stop | ذا دونات ستوب')}</title>
     <meta name="description" content={menu ? t('اختار فئتك وتصفّح الأصناف والأسعار.') : t('ذا دونات ستوب — دونات ومشروبات لكل لحظة حلوة.')} />
