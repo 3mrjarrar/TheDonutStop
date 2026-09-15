@@ -2,9 +2,9 @@
 
 Generated with the built-in image_gen tool. Final files:
 
-- assets/donuts/34-red-velvet-cream-cheese.png
-- assets/donuts/35-blueberry-cheesecake.png
-- assets/donuts/36-strawberry-jam-cream.png
+- public/assets/donuts/34-red-velvet-cream-cheese.png
+- public/assets/donuts/35-blueberry-cheesecake.png
+- public/assets/donuts/36-strawberry-jam-cream.png
 
 ## Prompts
 

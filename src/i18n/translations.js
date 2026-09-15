@@ -1,5 +1,5 @@
 // Natural-language keys preserve the original Arabic copy and inline markup.
-const englishTranslations = {
+export const englishTranslations = {
   'عروض بتحلّي يومك': 'Sweeten your day',
   'صباحك أحلى': 'A sweeter morning',
   'دونات + قهوة': 'Donut + coffee',
@@ -91,57 +91,3 @@ const englishTranslations = {
   'ارجع لفوق ↑': 'Back to top ↑',
   'ذا دونات ستوب · دونات ومشروبات': 'The Donut Stop · Donuts & drinks'
 };
-
-function initializeLanguage() {
-  const translations = [];
-  const walker = document.createTreeWalker(document.documentElement, NodeFilter.SHOW_TEXT);
-  while (walker.nextNode()) {
-    const node = walker.currentNode;
-    if (['SCRIPT', 'STYLE'].includes(node.parentElement?.tagName)) continue;
-    const key = node.textContent.trim();
-    if (Object.hasOwn(englishTranslations, key)) {
-      const leading = node.textContent.match(/^\s*/)[0];
-      const trailing = node.textContent.match(/\s*$/)[0];
-      translations.push(() => { node.textContent = leading + i18next.t(key) + trailing; });
-    }
-  }
-  document.querySelectorAll('[alt], [aria-label], meta[name="description"]').forEach(element => {
-    ['alt', 'aria-label', 'content'].forEach(attribute => {
-      const key = element.getAttribute(attribute);
-      if (Object.hasOwn(englishTranslations, key)) {
-        translations.push(() => element.setAttribute(attribute, i18next.t(key)));
-      }
-    });
-  });
-  const switcher = document.getElementById('language-switch');
-  let savedLanguage;
-  try { savedLanguage = localStorage.getItem('donut-stop-language'); } catch {}
-
-  function renderLanguage() {
-    const language = i18next.resolvedLanguage;
-    document.documentElement.lang = language;
-    document.documentElement.dir = i18next.dir(language);
-    translations.forEach(translate => translate());
-    const isArabic = language === 'ar';
-    switcher.textContent = isArabic ? 'English' : 'العربية';
-    switcher.lang = isArabic ? 'en' : 'ar';
-    switcher.setAttribute('aria-label', isArabic ? 'Switch to English' : 'التبديل إلى العربية');
-    showCategory(document.querySelector('.tab.active')?.dataset.category || 'donuts');
-    try { localStorage.setItem('donut-stop-language', language); } catch {}
-  }
-  i18next.on('languageChanged', renderLanguage);
-  i18next.init({
-    lng: savedLanguage === 'en' ? 'en' : 'ar',
-    fallbackLng: 'ar',
-    supportedLngs: ['ar', 'en'],
-    keySeparator: false,
-    nsSeparator: false,
-    resources: {
-      ar: { translation: Object.fromEntries(Object.keys(englishTranslations).map(key => [key, key])) },
-      en: { translation: englishTranslations }
-    }
-  });
-  switcher.addEventListener('click', () => {
-    i18next.changeLanguage(i18next.resolvedLanguage === 'ar' ? 'en' : 'ar');
-  });
-}

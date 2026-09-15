@@ -1,0 +1,49 @@
+.menu-section{background:#fffaf0}
+.tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+.tab{border:1px solid #b9cfca;background:white;border-radius:40px;color:var(--dark);padding:11px 22px;font-weight:800;cursor:pointer}
+.tab:hover,.tab.active{background:var(--dark);color:white;border-color:var(--dark)}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.menu-group-heading{grid-column:1/-1;margin:18px 0 0;color:var(--dark);font-size:22px;font-weight:800}
+.menu-group-heading:first-child{margin-top:0}
+.menu-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 17px;background:white;border:1px solid #e8ebe3;border-radius:14px;min-height:72px}
+.menu-item-main{display:flex;align-items:center;gap:12px;min-width:0}
+.menu-item img{width:52px;height:52px;object-fit:contain;flex:none}
+.menu-item h3{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;direction:ltr;text-align:right;margin:0;line-height:1.3}
+.menu-item strong{white-space:nowrap;color:#d76885;font-size:17px}
+@media(max-width:900px){.menu-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:650px){.menu-grid{grid-template-columns:1fr}.tabs{gap:7px}.tab{font-size:14px;padding:10px 14px}}
+html[dir="ltr"] .feature-info h3,html[dir="ltr"] .menu-item h3{text-align:left}
+.menu-grid.donut-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.donut-card{display:flex;flex-direction:column;min-width:0}
+.donut-card .feature-image{height:auto;aspect-ratio:1.42}
+.donut-card .feature-image img{width:75%;height:85%;max-height:240px}
+.donut-card .feature-info{flex:1;align-items:flex-start;gap:12px}
+.donut-card .feature-info>div{min-width:0}
+.donut-card .feature-info h3{text-align:start;line-height:1.35}
+.donut-card .feature-info p{font-size:15px;line-height:1.5}
+.donut-card .feature-info strong{flex-shrink:0}
+@media(max-width:1100px){.menu-grid.donut-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.menu-grid.donut-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.menu-grid.donut-grid{gap:12px}.donut-card .feature-info{flex-direction:row;flex-wrap:wrap;padding:14px;gap:8px}.donut-card .feature-info>div{flex:1 1 100%}.donut-card .feature-info p{font-size:14px}.donut-card .feature-image img{width:80%}}
+@media(max-width:360px){.menu-grid.donut-grid{grid-template-columns:1fr}}
+.menu-grid.hot-drink-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.hot-drink-card{min-width:0;display:flex;flex-direction:column}
+.hot-drink-image{position:relative;aspect-ratio:1;overflow:hidden;background:#ffe299;direction:ltr}
+.hot-drink-image img{position:absolute;top:0;left:0;width:200%;height:100%;max-width:none;object-fit:fill}
+.hot-drink-image[data-size="large"] img{left:-100%}
+.hot-drink-card:hover img{transform:none}
+.hot-drink-card .feature-info{flex:1;align-items:flex-start;padding:18px 16px 12px}
+.hot-drink-card h3{text-align:start;line-height:1.4}
+.drink-sizes{display:flex;gap:6px;margin:0 16px 16px;padding:4px;border-radius:24px;background:#f2f5ef}
+.drink-sizes button{flex:1;min-height:40px;padding:8px 12px;border:0;border-radius:20px;background:transparent;color:var(--dark);font-weight:800;cursor:pointer}
+.drink-sizes button[aria-pressed="true"]{background:var(--dark);color:white}
+.drink-sizes button:focus-visible{outline:3px solid #dc718d;outline-offset:3px}
+.drink-size-label{margin:0 16px 16px;min-height:48px;display:flex;align-items:center;gap:8px;color:#688182;font-size:14px;font-weight:700}
+.drink-size-label::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--teal);flex:none}
+@media(max-width:1100px){.menu-grid.hot-drink-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.menu-grid.hot-drink-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.menu-grid.hot-drink-grid{gap:12px}.hot-drink-card .feature-info{padding:14px 12px 10px}.drink-sizes{margin:0 10px 12px}.drink-sizes button{padding:8px;font-size:14px}}
+@media(max-width:360px){.menu-grid.hot-drink-grid{grid-template-columns:1fr}}
+.hot-drink-card .drink-description{font-size:14px;line-height:1.65;margin-top:6px}
+.hot-drink-card .feature-info>div{min-width:0}
+.menu-section h1{font-size:clamp(32px,4vw,52px);line-height:1.2;letter-spacing:-.035em;margin:12px 0 0}.menu-section h1 span{color:#e68199}.menu-section{min-height:65vh}#menu-list:focus-visible{outline:2px solid var(--teal);outline-offset:5px}

@@ -1,0 +1,2 @@
+.marquee{background:var(--teal);color:#fff5db;overflow:hidden;white-space:nowrap;padding:13px 0;font-family:'DM Sans',sans-serif;font-weight:800;letter-spacing:.13em;font-size:15px}
+.marquee span{display:block;text-align:center}
