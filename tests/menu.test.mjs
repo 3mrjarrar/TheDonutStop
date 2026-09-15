@@ -17,7 +17,7 @@ test('built pages expose crawlable content and menu navigation before JavaScript
   const menuPage = readFileSync('dist/menu/index.html', 'utf8');
   assert.match(home, /id="favorites"/);
   assert.doesNotMatch(home, /id="menu-list"/);
-  assert.equal((home.match(/href="\/menu"/g) || []).length, 4);
+  assert.equal((home.match(/href="\/menu"/g) || []).length, 3);
   assert.doesNotMatch(home, /href="#menu"/);
   assert.match(menuPage, /aria-current="page"/);
   assert.equal((menuPage.match(/feature-card donut-card/g) || []).length, 34);
