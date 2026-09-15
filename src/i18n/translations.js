@@ -38,6 +38,7 @@ export const englishTranslations = {
   'ذا دونات ستوب - الرئيسية': 'The Donut Stop — Home',
   'شعار ذا دونات ستوب': 'The Donut Stop logo',
   'القائمة الرئيسية': 'Main navigation',
+  'الرئيسية': 'Home',
   'المفضّلة': 'Favorites',
   'المنيو': 'Menu',
   'العروض': 'Offers',
