@@ -58,8 +58,11 @@ html[dir="ltr"] .offers h2,html[dir="ltr"] .closing h2{font-size:clamp(36px,4.5v
 .contact-arrow{margin-inline-start:auto;color:#ffa0b8;font-size:24px}
 .contact-locations h3{font-size:20px;margin:0 0 15px}
 .location-list{list-style:none;padding:0;margin:0}
-.location-list li{display:flex;gap:13px;align-items:center;padding:14px 0;border-bottom:1px solid #47706e;font-size:16px;line-height:1.6}
+.location-list li{display:flex;align-items:center;border-bottom:1px solid #47706e;font-size:16px;line-height:1.6}
 .location-list li:last-child{border-bottom:0}
+.location-link{display:flex;gap:13px;align-items:inherit;width:100%;padding:14px 0;border-radius:4px}
+.location-link:hover{color:#ffa0b8}
+.location-link:hover .location-icon{background:#ffa0b8;color:#123f43}
 .location-icon{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:12px;background:#265558;color:#ffa0b8}
 .location-icon svg{width:21px;height:21px}
 .contact-bottom{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center;margin-top:42px;padding-top:22px;border-top:1px solid #47706e;color:#d5e5df;font-size:13px}
