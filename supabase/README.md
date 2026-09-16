@@ -1,7 +1,7 @@
 # Supabase foundation
 
 This is the catalog/inventory foundation, not a completed ordering system.
-The existing storefront still uses its static catalog until the branch menu is integrated.
+The menu reads branch inventory from Supabase after branch selection. Selection is saved on the device, and branch-image links can select a branch. Availability refreshes every 30 seconds and on window focus. Cart and checkout are not implemented yet.
 
 ## Apply in the Supabase SQL Editor
 
@@ -18,7 +18,7 @@ with `node scripts/generate-catalog-seed.mjs` when preparing a fresh environment
 Copy `.env.example` to `.env.local` and set the URL and publishable key.
 The local project is already configured. Set the same two VITE variables in the
 website host when deploying. Never put a secret/service-role key in a VITE variable.
-`src/lib/supabase.js` exposes the client and a branch query for the next UI step.
+`src/lib/supabase.js` exposes the client, branch query, and branch menu query.
 
 ## Security and remaining work
 
@@ -34,5 +34,4 @@ and cross-branch access against a test database before accepting live orders.
 Disable public staff sign-up before launching admin authentication; create the
 first owner through a trusted administrative setup, never from browser inputs.
 
-The SQL has not been applied or validated against the hosted database by Codex.
-Only the publishable key is available, which cannot execute schema migrations.
+The user reported applying the SQL successfully. Read-only verification returned all three branches and 96 inventory variants for Nablus, all at zero stock. Only the publishable key is available locally; it cannot execute schema migrations.

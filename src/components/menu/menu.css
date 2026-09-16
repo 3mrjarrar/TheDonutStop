@@ -47,3 +47,8 @@ html[dir="ltr"] .feature-info h3,html[dir="ltr"] .menu-item h3{text-align:left}
 .hot-drink-card .drink-description{font-size:14px;line-height:1.65;margin-top:6px}
 .hot-drink-card .feature-info>div{min-width:0}
 .menu-section h1{font-size:clamp(32px,4vw,52px);line-height:1.2;letter-spacing:-.035em;margin:12px 0 0}.menu-section h1 span{color:#e68199}.menu-section{min-height:65vh}#menu-list:focus-visible{outline:2px solid var(--teal);outline-offset:5px}
+.branch-picker{padding:24px;background:#fff;border:1px solid #b9cfca;border-radius:20px;margin-bottom:28px}
+.branch-picker h2{font-size:22px;margin:0 0 18px}.branch-picker .tabs{margin-bottom:12px}
+.stock-status{margin:0 16px 16px;font-weight:800;border-radius:12px;padding:10px 14px}
+.stock-status.available{color:#17623b;background:#e4f5e9}.stock-status.unavailable{color:#a02b35;background:#ffe9eb}
+.branch-picker button:focus-visible,.hours-grid a:focus-visible{outline:3px solid #b33762;outline-offset:4px}

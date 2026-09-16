@@ -16,6 +16,7 @@ export const englishTranslations = {
   'كل ثلاثاء: 7 عليك و5 علينا.': 'Every Tuesday: buy 7, get 5 free.',
   'اشترِ 5 دونات واحصل على واحدة مجانًا.': 'Buy 5 donuts and get 1 free.',
   'خطّط لوقفتك الحلوة': 'Plan your sweet stop',
+  'فروعنا': 'Our branches',
   'أوقات الدوام': 'Available Times',
   'أوقات الدوام في فروعنا الثلاثة.': 'Opening hours at our three locations.',
   'رام الله، الطيرة: أيام الأسبوع من 7:30 صباحًا حتى منتصف الليل. الجمعة من 9 صباحًا حتى منتصف الليل.': 'Ramallah, Tireh: weekdays 7:30 AM to midnight. Friday 9 AM to midnight.',
