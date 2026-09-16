@@ -2,3 +2,5 @@ node_modules/
 dist/
 .prerender/
 .DS_Store
+.env*
+!.env.example
