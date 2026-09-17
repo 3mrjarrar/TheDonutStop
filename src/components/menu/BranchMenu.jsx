@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router';
 import { getBranches, getBranchMenu } from '../../lib/supabase';
 import { useLanguage } from '../../i18n/LanguageContext';
 import './menu.css';
+import { isAvailable } from '../../lib/availability';
 
 const categories = [['donuts', 'دونات', 'Donuts'], ['hot', 'مشروبات ساخنة', 'Hot drinks'], ['cold', 'مشروبات باردة', 'Cold drinks'], ['blends', 'سموذي وفرابيه', 'Smoothies & frappes']];
 const storageKey = 'donut-stop-branch';
@@ -78,7 +79,7 @@ export default function BranchMenu() {
           const variants = product.variants.sort((a, b) => ({ S: 0, L: 1 }[a.product_variants.size] ?? 0) - ({ S: 0, L: 1 }[b.product_variants.size] ?? 0));
           const row = variants.find(item => item.product_variants.id === sizes[product.id]) || variants[0];
           const variant = row.product_variants;
-          const available = row.quantity > 0 && !row.manual_unavailable;
+          const available = isAvailable(product.category, row);
           const donut = category === 'donuts';
           const image = product.image_path || (donut ? null : `/assets/${category === 'hot' ? 'hot-drinks' : 'cold-drinks'}/${encodeURIComponent(product.name)}.png`);
           return <article className={`feature-card ${donut ? 'donut-card' : 'hot-drink-card'}`} key={product.id}>
