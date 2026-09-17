@@ -9,7 +9,7 @@ export const supabase = url && key ? createClient(url, key) : null;
 export async function getBranches() {
   if (!supabase) throw new Error('Supabase is not configured.');
   const { data, error } = await supabase.from('branches')
-    .select('id, code, name_ar, name_en').eq('active', true).order('sort_order');
+    .select('id, code, name_ar, name_en, delivery_enabled, delivery_fee').eq('active', true).order('sort_order');
   if (error) throw error;
   return data;
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import './Admin.css';
+import Orders from './Orders';
 import { isAvailable, tracksQuantity } from '../../lib/availability';
 
 const actions = { restock: 'إضافة مخزون', waste: 'تسجيل تالف', count: 'تصحيح الجرد', unavailable: 'إيقاف البيع', available: 'إعادة إتاحة البيع' };
@@ -48,7 +49,7 @@ export default function Admin() {
     setLoading(true); setError('');
     async function load() {
       const person = unwrap(await supabase.from('staff_profiles').select('*').eq('user_id', session.user.id).maybeSingle());
-      if (!person?.active || !['owner', 'manager'].includes(person.role)) throw new Error('هذا الحساب لا يملك صلاحية إدارة المخزون. راجع المالك.');
+      if (!person?.active || !['owner', 'manager', 'order_staff'].includes(person.role)) throw new Error('هذا الحساب لا يملك صلاحية لوحة الإدارة. راجع المالك.');
       let list = unwrap(await supabase.from('branches').select('*').eq('active', true).order('sort_order'));
       if (person.role !== 'owner') {
         const assigned = unwrap(await supabase.from('staff_branches').select('branch_id').eq('user_id', person.user_id));
@@ -63,7 +64,7 @@ export default function Admin() {
   useEffect(() => {
     let live = true;
     setRows([]); setEvents([]); setEdit(null);
-    if (!branch) return;
+    if (!branch || profile?.role === 'order_staff') { setLoading(false); return; }
     setLoading(true); setError('');
     Promise.all([
       supabase.from('branch_inventory').select('*, product_variants!inner(id,size,products!inner(name,category))').eq('branch_id', branch).then(unwrap),
@@ -72,7 +73,7 @@ export default function Admin() {
       .catch(() => { if (live) setError('تعذّر تحميل المخزون والسجل. تحقق من تطبيق ملف إعداد لوحة الإدارة ثم أعد المحاولة.'); })
       .finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
-  }, [branch, revision]);
+  }, [branch, revision, profile?.role]);
 
   async function login(event) {
     event.preventDefault(); setBusy(true); setError(''); setMessage('');
@@ -124,7 +125,7 @@ export default function Admin() {
   const selected = branches.find(item => item.id === branch);
   return <main className="admin-shell" dir="rtl">
     <title>لوحة الإدارة | The Donut Stop</title><meta name="robots" content="noindex,nofollow" />
-    <header className="admin-header"><div><Link to="/">The Donut Stop</Link><h1>إدارة المخزون</h1></div>{session && <button disabled={busy} onClick={logout}>تسجيل الخروج</button>}</header>
+    <header className="admin-header"><div><Link to="/">The Donut Stop</Link><h1>إدارة الطلبات والمخزون</h1></div>{session && <button disabled={busy} onClick={logout}>تسجيل الخروج</button>}</header>
     {error && <p className="admin-error" role="alert">{error}</p>}{message && <p className="admin-success" role="status">{message}</p>}
     {!ready ? <p role="status">جارٍ التحميل…</p> : recovery ? <form className="admin-panel admin-login" onSubmit={changePassword}><h2>تعيين كلمة مرور جديدة</h2><label>كلمة المرور الجديدة<input name="password" type="password" autoComplete="new-password" required minLength={12} /></label><button disabled={busy}>حفظ كلمة المرور</button></form> : !session ? <form className="admin-panel admin-login" onSubmit={login}>
       <h2>تسجيل دخول الموظفين</h2><p>استخدم حسابك الشخصي المخصص لإدارة المحل.</p>
@@ -133,7 +134,8 @@ export default function Admin() {
       <button disabled={busy || !supabase}>{busy ? 'جارٍ التنفيذ…' : 'تسجيل الدخول'}</button><button type="button" className="secondary" disabled={busy || !supabase} onClick={reset}>نسيت كلمة المرور</button>
     </form> : <>
       {profile && <section className="admin-panel"><h2>مرحبًا، {profile.name}</h2><div className="admin-toolbar"><label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setMessage(''); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label><label>بحث عن صنف<input type="search" value={search} onChange={event => setSearch(event.target.value)} /></label><button disabled={busy || loading} onClick={() => setRevision(value => value + 1)}>تحديث</button></div>{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
-      {loading ? <p role="status">جارٍ تحميل المخزون…</p> : profile && branch && <>
+      {profile && branch && <Orders key={branch} branch={branch} onChange={() => setRevision(value => value + 1)} />}
+      {loading ? <p role="status">جارٍ تحميل المخزون…</p> : profile && profile.role !== 'order_staff' && branch && <>
         <section className="admin-panel"><h2>مخزون {selected?.name_ar}</h2><div className="admin-table-wrap"><table><thead><tr><th>الصنف</th><th>الكمية</th><th>التوفر</th><th>تعديل</th></tr></thead><tbody>{rows.filter(row => row.product_variants.products.name.toLowerCase().includes(search.toLowerCase())).sort((a,b) => a.product_variants.products.name.localeCompare(b.product_variants.products.name)).map(row => <tr key={row.variant_id}><td>{row.product_variants.products.name} {row.product_variants.size !== 'standard' && `(${row.product_variants.size})`}</td><td>{tracksQuantity(row.product_variants.products.category) ? row.quantity : 'لا يُقاس بالكمية'}</td><td>{!row.carried ? 'غير مدرج' : isAvailable(row.product_variants.products.category, row) ? 'متوفر' : 'غير متوفر'}</td><td><button disabled={busy} onClick={() => setEdit({ row, action: tracksQuantity(row.product_variants.products.category) ? 'restock' : row.manual_unavailable ? 'available' : 'unavailable', requestId: crypto.randomUUID() })}>{tracksQuantity(row.product_variants.products.category) ? 'تعديل المخزون' : 'تغيير الحالة'}</button></td></tr>)}</tbody></table></div>{!rows.length && <p>لا توجد أصناف. تحقق من تشغيل ملف المنيو.</p>}</section>
         {edit && <section ref={editPanel} tabIndex={-1} className="admin-panel" aria-label="تعديل المخزون"><form onSubmit={save} key={edit.requestId}><h2>{edit.row.product_variants.products.name} — {selected?.name_ar}</h2>{tracksQuantity(edit.row.product_variants.products.category) && <p>الكمية الحالية: {edit.row.quantity}</p>}<fieldset disabled={busy}><label>نوع التعديل<select value={edit.action} onChange={event => setEdit(current => ({ ...current, action: event.target.value, requestId: crypto.randomUUID() }))}>{Object.entries(actions).filter(([key]) => tracksQuantity(edit.row.product_variants.products.category) || ['available', 'unavailable'].includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{['restock','waste','count'].includes(edit.action) && <label>{edit.action === 'count' ? 'العدد الفعلي بعد الجرد' : 'الكمية'}<input name="amount" type="number" min={edit.action === 'count' ? 0 : 1} max={1000000} step="1" required /></label>}<label>سبب التعديل<input name="reason" minLength={2} maxLength={500} required /></label><p>{tracksQuantity(edit.row.product_variants.products.category) ? 'إضافة المخزون تعيد إتاحة الصنف تلقائيًا.' : 'المشروبات متوفرة دائمًا ما لم توقف بيعها يدويًا.'}</p><button>حفظ</button> <button type="button" className="secondary" onClick={() => setEdit(null)}>إلغاء</button></fieldset></form></section>}
         <section className="admin-panel"><h2>آخر 30 تعديلًا</h2>{events.length ? <ul className="admin-history">{events.map(item => <li key={item.id}><strong>{rows.find(row => row.variant_id === item.variant_id)?.product_variants.products.name || 'صنف'}</strong> — {actions[item.action] || item.action}: {!['available', 'unavailable'].includes(item.action) && <b dir="ltr">{item.delta > 0 ? '+' : ''}{item.delta}</b>} — {item.reason}<small>{new Date(item.created_at).toLocaleString('ar')} · بواسطة {item.actor_id === session.user.id ? profile.name : item.actor_id}</small></li>)}</ul> : <p>لم تُسجّل تعديلات بعد.</p>}</section>

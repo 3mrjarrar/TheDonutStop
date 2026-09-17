@@ -1,7 +1,7 @@
 # Supabase foundation
 
 This is the catalog/inventory foundation, not a completed ordering system.
-The menu reads branch inventory from Supabase after branch selection. Selection is saved on the device, and branch-image links can select a branch. Availability refreshes every 30 seconds and on window focus. Cart and checkout are not implemented yet.
+The menu reads branch inventory from Supabase after branch selection. Selection is saved on the device, and branch-image links can select a branch. Availability refreshes every 30 seconds and on window focus. Cart, guest cash checkout, and branch order handling are implemented; apply migration 004 using ORDERS_SETUP.md.
 
 ## Apply in the Supabase SQL Editor
 
