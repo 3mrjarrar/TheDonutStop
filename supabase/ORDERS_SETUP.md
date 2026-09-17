@@ -38,3 +38,15 @@ PGLITE_MODULE=/path/to/pglite/dist/index.js node supabase/tests/orders.mjs
 Run `migrations/202609180001_order_tracking.sql` in the Supabase SQL Editor after migration 004, then deploy the rebuilt frontend. No Realtime publication or anonymous table access is needed. Customers poll the restricted status RPC every 5 seconds using their private checkout request UUID; the card persists in the same browser across reloads.
 
 Use **قبول وبدء التحضير** to accept an order, **تم التجهيز — جاهز للاستلام/للتوصيل** when prepared, **إكمال الطلب** after fulfillment, and **رفض / إلغاء** to cancel. These transitions update the customer's card automatically.
+
+## Donut offers
+
+Apply `migrations/202609180002_donut_offers.sql` after all previous migrations **before deploying this frontend**. Checkout now requires `get_guest_order_quote`; admin orders also read the new discount fields. No live migration has been applied by the local implementation.
+
+- Every complete 6 donuts earns one free donut whose current branch price is exactly 6 or 7 shekels. The server chooses the highest eligible price to maximize this discount. The overlay appears when one donut is needed to complete a group and lets the customer choose an available eligible donut.
+- Tuesday uses the database clock in `Asia/Hebron`. Every complete 12 donuts earns 5 free donuts; the lowest-priced units are discounted, so a dozen is charged at the price of its most expensive 7. Extra units count at their normal prices.
+- Both discounts are calculated on Tuesdays; only the larger discount is applied (daily wins a tie). Drinks and delivery fees are excluded. Daily and Tuesday discounts never stack.
+- Free donuts still reserve stock and appear in the order with `free_quantity`. Cancellation restores all units. Retry request IDs continue to prevent duplicate orders.
+- The morning coffee promotion is informational only; its checkout pricing was not part of this change.
+
+Validation: `PGLITE_MODULE=/path/to/@electric-sql/pglite/dist/index.js node supabase/tests/offers.mjs` and the existing `orders.mjs` suite.

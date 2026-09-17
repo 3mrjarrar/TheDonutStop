@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import Header from '../components/Header/Header';
 import OrderTracker from '../components/orders/OrderTracker';
+import OfferPrompt from '../components/cart/OfferPrompt';
 import Footer from '../components/Footer/Footer';
 import { useLanguage } from '../i18n/LanguageContext';
 export default function MainLayout() {
@@ -25,6 +26,6 @@ export default function MainLayout() {
     <meta name="description" content={menu ? t('اختار فئتك وتصفّح الأصناف والأسعار.') : t('ذا دونات ستوب — دونات ومشروبات لكل لحظة حلوة.')} />
     {missing && <meta name="robots" content="noindex" />}
     <a className="skip-link" href="#top">{language === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
-    <Header /><main id="top" tabIndex={-1}><OrderTracker /><Outlet /></main><Footer />
+    <Header /><main id="top" tabIndex={-1}><OrderTracker /><Outlet /><OfferPrompt /></main><Footer />
   </>;
 }

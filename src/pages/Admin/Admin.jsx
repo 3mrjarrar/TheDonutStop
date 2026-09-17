@@ -3,6 +3,12 @@ import { Link } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import './Admin.css';
 import Orders from './Orders';
+import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
+import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import NotificationsActiveOutlinedIcon from '@mui/icons-material/NotificationsActiveOutlined';
+import AdminOffers from './AdminOffers';
+import { drinkTypes, inventoryGroup, inventoryPrice, byInventoryPrice } from './inventory';
 import { isAvailable, tracksQuantity } from '../../lib/availability';
 
 const actions = { restock: 'إضافة مخزون', waste: 'تسجيل تالف', count: 'تصحيح الجرد', unavailable: 'إيقاف البيع', available: 'إعادة إتاحة البيع' };
@@ -24,6 +30,11 @@ export default function Admin() {
   const [edit, setEdit] = useState(null);
   const [revision, setRevision] = useState(0);
   const [recovery, setRecovery] = useState(false);
+  const [section, setSection] = useState('orders');
+  const [inventoryType, setInventoryType] = useState('donuts');
+  const [drinkType, setDrinkType] = useState('mojito');
+  const [newCount, setNewCount] = useState(0);
+  const [notice, setNotice] = useState(null);
   const saving = useRef(false);
   const editPanel = useRef(null);
   useEffect(() => { if (edit) { editPanel.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); editPanel.current?.focus(); } }, [edit?.row.variant_id]);
@@ -44,7 +55,7 @@ export default function Admin() {
 
   useEffect(() => {
     let live = true;
-    setProfile(null); setBranches([]); setBranch(''); setRows([]); setEvents([]); setEdit(null);
+    setSection('orders'); setNotice(null); setNewCount(0); setProfile(null); setBranches([]); setBranch(''); setRows([]); setEvents([]); setEdit(null);
     if (!session?.user.id) return;
     setLoading(true); setError('');
     async function load() {
@@ -67,7 +78,7 @@ export default function Admin() {
     if (!branch || profile?.role === 'order_staff') { setLoading(false); return; }
     setLoading(true); setError('');
     Promise.all([
-      supabase.from('branch_inventory').select('*, product_variants!inner(id,size,products!inner(name,category))').eq('branch_id', branch).then(unwrap),
+      supabase.from('branch_inventory').select('*, product_variants!inner(id,size,price,products!inner(name,slug,category))').eq('branch_id', branch).then(unwrap),
       supabase.from('inventory_events').select('*').eq('branch_id', branch).order('created_at', { ascending: false }).limit(30).then(unwrap),
     ]).then(([inventory, history]) => { if (live) { setRows(inventory); setEvents(history); } })
       .catch(() => { if (live) setError('تعذّر تحميل المخزون والسجل. تحقق من تطبيق ملف إعداد لوحة الإدارة ثم أعد المحاولة.'); })
@@ -122,10 +133,19 @@ export default function Admin() {
     else { setRecovery(false); setMessage(''); setError(''); }
     setBusy(false);
   }
+  function handleOrders(data, incoming) {
+    setNewCount(data.filter(order => order.status === 'new').length);
+    if (incoming.length) setNotice({ count: incoming.length, number: incoming[0].order_number });
+  }
+  const visibleRows = rows.filter(row => inventoryGroup(row.product_variants.products) === (inventoryType === 'donuts' ? 'donuts' : drinkType) && row.product_variants.products.name.toLowerCase().includes(search.toLowerCase())).sort(byInventoryPrice);
+  const visibleEvents = events.filter(item => visibleRows.some(row => row.variant_id === item.variant_id));
+  const sectionTitle = { orders: 'الطلبات', inventory: 'المخزون', offers: 'العروض' }[section];
   const selected = branches.find(item => item.id === branch);
-  return <main className="admin-shell" dir="rtl">
+  return <main className={`admin-shell${session && profile && !recovery ? ' admin-dashboard' : ''}`} dir="rtl">
     <title>لوحة الإدارة | The Donut Stop</title><meta name="robots" content="noindex,nofollow" />
-    <header className="admin-header"><div><Link to="/">The Donut Stop</Link><h1>إدارة الطلبات والمخزون</h1></div>{session && <button disabled={busy} onClick={logout}>تسجيل الخروج</button>}</header>
+    {session && profile && !recovery && <aside className="admin-sidebar"><Link className="admin-brand" to="/"><img src="/assets/logo.jpg" alt="" /><span>The Donut Stop<small>لوحة الإدارة</small></span></Link><nav aria-label="أقسام لوحة الإدارة">{[['orders','الطلبات',ReceiptLongIcon],['inventory','المخزون',Inventory2OutlinedIcon],['offers','العروض',LocalOfferOutlinedIcon]].map(([key,label,Icon]) => <button type="button" key={key} disabled={busy || (key === 'inventory' && profile.role === 'order_staff')} className={section === key ? 'is-active' : ''} aria-current={section === key ? 'page' : undefined} onClick={() => { setSection(key); setEdit(null); }}><Icon /><span>{label}</span>{key === 'orders' && newCount > 0 && <b className="admin-count">{newCount}</b>}</button>)}</nav><div className="admin-sidebar-footer"><span>{profile.name}</span><small>{selected?.name_ar}</small><Link to="/">العودة للموقع ↗</Link></div></aside>}
+    <div className="admin-workspace">
+    <header className="admin-header"><div><Link to="/">The Donut Stop</Link><h1>{session && profile ? sectionTitle : 'لوحة الإدارة'}</h1></div>{session && <button disabled={busy} onClick={logout}>تسجيل الخروج</button>}</header>
     {error && <p className="admin-error" role="alert">{error}</p>}{message && <p className="admin-success" role="status">{message}</p>}
     {!ready ? <p role="status">جارٍ التحميل…</p> : recovery ? <form className="admin-panel admin-login" onSubmit={changePassword}><h2>تعيين كلمة مرور جديدة</h2><label>كلمة المرور الجديدة<input name="password" type="password" autoComplete="new-password" required minLength={12} /></label><button disabled={busy}>حفظ كلمة المرور</button></form> : !session ? <form className="admin-panel admin-login" onSubmit={login}>
       <h2>تسجيل دخول الموظفين</h2><p>استخدم حسابك الشخصي المخصص لإدارة المحل.</p>
@@ -133,13 +153,21 @@ export default function Admin() {
       <label>كلمة المرور<input name="password" type="password" autoComplete="current-password" dir="ltr" required /></label>
       <button disabled={busy || !supabase}>{busy ? 'جارٍ التنفيذ…' : 'تسجيل الدخول'}</button><button type="button" className="secondary" disabled={busy || !supabase} onClick={reset}>نسيت كلمة المرور</button>
     </form> : <>
-      {profile && <section className="admin-panel"><h2>مرحبًا، {profile.name}</h2><div className="admin-toolbar"><label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setMessage(''); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label><label>بحث عن صنف<input type="search" value={search} onChange={event => setSearch(event.target.value)} /></label><button disabled={busy || loading} onClick={() => setRevision(value => value + 1)}>تحديث</button></div>{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
-      {profile && branch && <Orders key={branch} branch={branch} onChange={() => setRevision(value => value + 1)} />}
+      {profile && <section className="admin-branch-bar"><div><strong>مرحبًا، {profile.name}</strong><p>إدارة يومك، من الطلب إلى التسليم.</p></div><label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setMessage(''); setNotice(null); setNewCount(0); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label>{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
+      {notice && <div className="admin-notification" role="alert"><NotificationsActiveOutlinedIcon /><div><strong>وصل طلب جديد!</strong><p>{notice.count > 1 ? `${notice.count} طلبات جديدة` : notice.number}</p></div><button onClick={() => { setSection('orders'); setNotice(null); }}>عرض الطلبات</button><button className="secondary" aria-label="إغلاق الإشعار" onClick={() => setNotice(null)}>إغلاق</button></div>}
+      {profile && branch && <div hidden={section !== 'orders'}><Orders key={branch} branch={branch} onOrders={handleOrders} onChange={() => setRevision(value => value + 1)} /></div>}
+      {profile && section === 'offers' && <AdminOffers />}
+      {section === 'inventory' && <>
+      <div className="admin-inventory-tabs" role="group" aria-label="نوع المخزون">{[['donuts','الدونات'],['drinks','المشروبات']].map(([key,label]) => <button key={key} aria-pressed={inventoryType === key} className={inventoryType === key ? 'is-active' : 'secondary'} disabled={busy} onClick={() => { setInventoryType(key); setSearch(''); setEdit(null); }}>{label}</button>)}</div>
+      {inventoryType === 'drinks' && <div className="admin-drink-tabs" role="group" aria-label="أنواع المشروبات">{drinkTypes.map(([key,label]) => <button type="button" key={key} aria-pressed={drinkType === key} className={drinkType === key ? 'is-active' : 'secondary'} disabled={busy} onClick={() => { setDrinkType(key); setSearch(''); setEdit(null); }}>{label}</button>)}</div>}
+      <div className="admin-toolbar inventory-toolbar"><label>بحث عن صنف<input type="search" placeholder={inventoryType === 'donuts' ? 'ابحث في الدونات…' : 'ابحث في المشروبات…'} value={search} onChange={event => setSearch(event.target.value)} /></label><button disabled={busy || loading} onClick={() => setRevision(value => value + 1)}>تحديث المخزون</button></div>
       {loading ? <p role="status">جارٍ تحميل المخزون…</p> : profile && profile.role !== 'order_staff' && branch && <>
-        <section className="admin-panel"><h2>مخزون {selected?.name_ar}</h2><div className="admin-table-wrap"><table><thead><tr><th>الصنف</th><th>الكمية</th><th>التوفر</th><th>تعديل</th></tr></thead><tbody>{rows.filter(row => row.product_variants.products.name.toLowerCase().includes(search.toLowerCase())).sort((a,b) => a.product_variants.products.name.localeCompare(b.product_variants.products.name)).map(row => <tr key={row.variant_id}><td>{row.product_variants.products.name} {row.product_variants.size !== 'standard' && `(${row.product_variants.size})`}</td><td>{tracksQuantity(row.product_variants.products.category) ? row.quantity : 'لا يُقاس بالكمية'}</td><td>{!row.carried ? 'غير مدرج' : isAvailable(row.product_variants.products.category, row) ? 'متوفر' : 'غير متوفر'}</td><td><button disabled={busy} onClick={() => setEdit({ row, action: tracksQuantity(row.product_variants.products.category) ? 'restock' : row.manual_unavailable ? 'available' : 'unavailable', requestId: crypto.randomUUID() })}>{tracksQuantity(row.product_variants.products.category) ? 'تعديل المخزون' : 'تغيير الحالة'}</button></td></tr>)}</tbody></table></div>{!rows.length && <p>لا توجد أصناف. تحقق من تشغيل ملف المنيو.</p>}</section>
+        <section className="admin-panel"><h2>{inventoryType === 'donuts' ? 'مخزون الدونات' : drinkTypes.find(([key]) => key === drinkType)?.[1]} — {selected?.name_ar}</h2><div className="admin-table-wrap"><table><thead><tr><th>الصنف</th><th aria-sort="ascending">السعر ↑</th><th>الكمية</th><th>التوفر</th><th>تعديل</th></tr></thead><tbody>{visibleRows.map(row => <tr key={row.variant_id}><td>{row.product_variants.products.name} {row.product_variants.size !== 'standard' && `(${row.product_variants.size})`}</td><td><bdi>{inventoryPrice(row).toFixed(2)} ₪</bdi></td><td>{tracksQuantity(row.product_variants.products.category) ? row.quantity : 'لا يُقاس بالكمية'}</td><td>{!row.carried ? 'غير مدرج' : isAvailable(row.product_variants.products.category, row) ? 'متوفر' : 'غير متوفر'}</td><td><button disabled={busy} onClick={() => setEdit({ row, action: tracksQuantity(row.product_variants.products.category) ? 'restock' : row.manual_unavailable ? 'available' : 'unavailable', requestId: crypto.randomUUID() })}>{tracksQuantity(row.product_variants.products.category) ? 'تعديل المخزون' : 'تغيير الحالة'}</button></td></tr>)}</tbody></table></div>{!visibleRows.length && <p>لا توجد أصناف مطابقة في هذا القسم.</p>}</section>
         {edit && <section ref={editPanel} tabIndex={-1} className="admin-panel" aria-label="تعديل المخزون"><form onSubmit={save} key={edit.requestId}><h2>{edit.row.product_variants.products.name} — {selected?.name_ar}</h2>{tracksQuantity(edit.row.product_variants.products.category) && <p>الكمية الحالية: {edit.row.quantity}</p>}<fieldset disabled={busy}><label>نوع التعديل<select value={edit.action} onChange={event => setEdit(current => ({ ...current, action: event.target.value, requestId: crypto.randomUUID() }))}>{Object.entries(actions).filter(([key]) => tracksQuantity(edit.row.product_variants.products.category) || ['available', 'unavailable'].includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label>{['restock','waste','count'].includes(edit.action) && <label>{edit.action === 'count' ? 'العدد الفعلي بعد الجرد' : 'الكمية'}<input name="amount" type="number" min={edit.action === 'count' ? 0 : 1} max={1000000} step="1" required /></label>}<label>سبب التعديل<input name="reason" minLength={2} maxLength={500} required /></label><p>{tracksQuantity(edit.row.product_variants.products.category) ? 'إضافة المخزون تعيد إتاحة الصنف تلقائيًا.' : 'المشروبات متوفرة دائمًا ما لم توقف بيعها يدويًا.'}</p><button>حفظ</button> <button type="button" className="secondary" onClick={() => setEdit(null)}>إلغاء</button></fieldset></form></section>}
-        <section className="admin-panel"><h2>آخر 30 تعديلًا</h2>{events.length ? <ul className="admin-history">{events.map(item => <li key={item.id}><strong>{rows.find(row => row.variant_id === item.variant_id)?.product_variants.products.name || 'صنف'}</strong> — {actions[item.action] || item.action}: {!['available', 'unavailable'].includes(item.action) && <b dir="ltr">{item.delta > 0 ? '+' : ''}{item.delta}</b>} — {item.reason}<small>{new Date(item.created_at).toLocaleString('ar')} · بواسطة {item.actor_id === session.user.id ? profile.name : item.actor_id}</small></li>)}</ul> : <p>لم تُسجّل تعديلات بعد.</p>}</section>
+        <section className="admin-panel"><h2>آخر 30 تعديلًا</h2>{visibleEvents.length ? <ul className="admin-history">{visibleEvents.map(item => <li key={item.id}><strong>{rows.find(row => row.variant_id === item.variant_id)?.product_variants.products.name || 'صنف'}</strong> — {actions[item.action] || item.action}: {!['available', 'unavailable'].includes(item.action) && <b dir="ltr">{item.delta > 0 ? '+' : ''}{item.delta}</b>} — {item.reason}<small>{new Date(item.created_at).toLocaleString('ar')} · بواسطة {item.actor_id === session.user.id ? profile.name : item.actor_id}</small></li>)}</ul> : <p>لم تُسجّل تعديلات بعد.</p>}</section>
+      </>}
       </>}
     </>}
+    </div>
   </main>;
 }

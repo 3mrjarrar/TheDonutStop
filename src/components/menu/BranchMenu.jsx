@@ -23,7 +23,7 @@ export default function BranchMenu() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [retry, setRetry] = useState(0);
-  const { cart, setCart, branch: cartBranch, setBranch: setCartBranch } = useCart();
+  const { cart, setCart, branch: cartBranch, setBranch: setCartBranch, locked } = useCart();
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function BranchMenu() {
   }, [branch]);
 
   function choose(code) {
-    if (code === branch?.code) return;
+    if (locked || code === branch?.code) return;
     if (cart.length && !window.confirm(en ? "Changing branch clears your cart. Continue?" : "تغيير الفرع سيُفرغ السلة. هل تريد المتابعة؟")) return;
     setCart([]); setCartBranch(null); setSelected(null);
     const next = new URLSearchParams(params);
@@ -82,7 +82,7 @@ export default function BranchMenu() {
     <div className="branch-picker">
       <h2>{en ? 'Choose the branch you want to order from' : 'اختر الفرع الذي تريد الطلب منه'}</h2>
       <div className="tabs" role="group" aria-label={en ? 'Branch' : 'الفرع'}>
-        {branches.map(item => <button type="button" key={item.id} className={`tab${branch?.id === item.id ? ' active' : ''}`} aria-pressed={branch?.id === item.id} onClick={() => choose(item.code)}>{en ? item.name_en : item.name_ar}</button>)}
+        {branches.map(item => <button type="button" key={item.id} disabled={locked} className={`tab${branch?.id === item.id ? ' active' : ''}`} aria-pressed={branch?.id === item.id} onClick={() => choose(item.code)}>{en ? item.name_en : item.name_ar}</button>)}
       </div>
       {branch && <p>{en ? 'Menu for: ' : 'منيو فرع: '}<strong>{en ? branch.name_en : branch.name_ar}</strong></p>}
     </div>
@@ -100,7 +100,7 @@ export default function BranchMenu() {
             {image && <div className={donut ? `feature-image ${['coral', 'lemon', 'pink', 'mint'][index % 4]}` : 'hot-drink-image'} data-size={variant.size === 'S' || ['Espresso', 'Ristretto', 'Lungo', 'Doppio'].includes(product.name) ? 'small' : 'large'}><img src={image} alt="" loading="lazy" /></div>}
             <div className="feature-info"><div><h3>{product.name}</h3><p>{en ? product.description_en : product.description_ar}</p></div><strong dir="ltr">{row.price_override ?? variant.price} ₪</strong></div>
             {variants.length > 1 && <div className="drink-sizes" role="group" aria-label={`${product.name} — ${en ? 'Size' : 'الحجم'}`}>{variants.map(item => <button type="button" key={item.product_variants.id} aria-pressed={variant.id === item.product_variants.id} onClick={() => setSizes(current => ({ ...current, [product.id]: item.product_variants.id }))}>{item.product_variants.size === 'S' ? (en ? 'Small' : 'صغير') : (en ? 'Large' : 'كبير')}</button>)}</div>}
-            <button type="button" className="tab add-cart" disabled={!available || (branchCart.length >= 50 && !branchCart.some(item => item.id === variant.id)) || (branchCart.find(item => item.id === variant.id)?.quantity || 0) >= (donut ? Math.min(99,row.quantity) : 99)} onClick={() => {
+            <button type="button" className="tab add-cart" disabled={locked || !available || (branchCart.length >= 50 && !branchCart.some(item => item.id === variant.id)) || (branchCart.find(item => item.id === variant.id)?.quantity || 0) >= (donut ? Math.min(99,row.quantity) : 99)} onClick={() => {
               if (cart.length && cartBranch?.id !== branch.id) {
                 if (!window.confirm(en ? 'Changing branch clears your cart. Continue?' : 'تغيير الفرع سيُفرغ السلة. هل تريد المتابعة؟')) return;
                 setCart([]);

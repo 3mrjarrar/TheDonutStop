@@ -2,7 +2,7 @@ import './Offers.css';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function Offers() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   return (<section className="offers" id="offers" aria-labelledby="offers-title">
 <div className="offers-showcase">
 <header className="offers-heading"><span className="eyebrow">{t("شارك الحلو مع الكل")}</span><h2 id="offers-title">{t("عروض بتحلّي يومك")}</h2></header>
@@ -12,11 +12,11 @@ export default function Offers() {
 </article>
 <article className="offer-row" aria-labelledby="tuesday-offer-title">
 <img className="offer-poster" src="/assets/offers/tuesday.png" width="1086" height="1448" loading="lazy" decoding="async" alt={t("كل ثلاثاء: 7 عليك و5 علينا.")} />
-<div className="offer-copy"><span className="eyebrow">{t("كل ثلاثاء")}</span><h3 id="tuesday-offer-title">{t("7 عليك،")}<br /><em>{t("و5 علينا!")}</em></h3><p>{t("لمّة الثلاثاء بدها حلو. خذ 7 دونات، وخلّي الـ5 الزيادة علينا.")}</p></div>
+<div className="offer-copy"><span className="eyebrow">{t("كل ثلاثاء")}</span><h3 id="tuesday-offer-title">{t("7 عليك،")}<br /><em>{t("و5 علينا!")}</em></h3><p>{language === 'en' ? 'Tuesdays only: choose 12 donuts at any price and pay for the most expensive 7. The better offer applies; offers cannot be combined.' : 'كل ثلاثاء: اختر 12 حبة من أي سعر وادفع ثمن أغلى 7 فقط. نطبّق العرض الأفضل لك دون جمع العرضين.'}</p></div>
 </article>
 <article className="offer-row" aria-labelledby="daily-offer-title">
 <img className="offer-poster" src="/assets/offers/daily.png" width="1086" height="1448" loading="lazy" decoding="async" alt={t("اشترِ 5 دونات واحصل على واحدة مجانًا.")} />
-<div className="offer-copy"><span className="eyebrow">{t("كل يوم")}</span><h3 id="daily-offer-title">{t("اختار 5،")}<br /><em>{t("والسادسة علينا!")}</em></h3><p>{t("نكهاتك المفضّلة، ومعها حبّة هدية. حلو أكثر للمشاركة.")}</p></div>
+<div className="offer-copy"><span className="eyebrow">{t("كل يوم")}</span><h3 id="daily-offer-title">{t("اختار 5،")}<br /><em>{t("والسادسة علينا!")}</em></h3><p>{language === 'en' ? 'Buy 5 donuts and choose your free sixth donut from the ₪6 and ₪7 varieties.' : 'اطلب 5 حبات واختر السادسة مجانًا من أصناف الدونات بسعر 6 أو 7 شيكل.'}</p></div>
 </article>
 </div>
 </section>);

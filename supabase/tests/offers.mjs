@@ -1,0 +1,75 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
+const db = new PGlite();
+await db.exec(`create role anon; create role authenticated; create schema auth;
+create table auth.users(id uuid primary key);
+create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
+for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql','migrations/202609180001_order_tracking.sql','migrations/202609180002_donut_offers.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
+
+const line=(id,price,quantity=1,category='donuts')=>({variant_id:id,unit_price:price,quantity,category});
+async function calculate(lines,tuesday=false) { return (await db.query('select calculate_donut_offer($1,$2) as quote',[JSON.stringify(lines),tuesday])).rows[0].quote; }
+let q=await calculate([line('a',10,5),line('b',7)]);
+assert.equal(q.discount,7); assert.equal(q.total,50); assert.equal(q.lines.find(x=>x.variant_id==='b').free_quantity,1);
+assert.equal((await calculate([line('a',8,6)])).discount,0);
+assert.equal((await calculate([line('a',7,5)])).discount,0);
+assert.equal((await calculate([line('a',7,5,'hot'),line('b',6)])).discount,0);
+q=await calculate([line('a',10,7),line('b',8,5)],true);
+assert.equal(q.total,70);assert.equal(q.discount,40);assert.equal(q.offer_code,'tuesday');
+assert.equal((await calculate([line('a',10,7),line('b',8,5)],false)).discount,0);
+q=await calculate([line('a',7,7),line('b',1,5)],true);
+assert.equal(q.offer_code,'daily');assert.equal(q.discount,14); // daily is better than five cheap free donuts
+q=await calculate([line('a',7,12)],true);assert.equal(q.discount,35); // no stacking with daily's 14
+q=await calculate([line('a',10,14),line('b',6,10),line('drink',20,1,'cold')],true);
+assert.equal(q.total,160); assert.equal(q.discount,60);
+q=await calculate([line('a',6,13)]);assert.equal(q.discount,12);assert.equal(q.total,66);
+await db.exec('set role anon');
+await assert.rejects(db.query('select calculate_donut_offer($1,true)',[JSON.stringify([line('a',7,12)])]));
+await db.exec('reset role');
+const branch=(await db.query('select id from branches order by sort_order limit 1')).rows[0].id;
+const variant=(await db.query("select v.id from product_variants v join products p on p.id=v.product_id where p.category='donuts' and v.price=6 limit 1")).rows[0].id;
+await db.query('update branch_inventory set quantity=100,price_override=7 where branch_id=$1 and variant_id=$2',[branch,variant]);
+const customer={name:'Offer Test',phone:'0592223333',fulfillment:'pickup',address:'',notes:'',payment_method:'cash'};
+const items=[{variant_id:variant,quantity:6}];
+await db.exec('set role anon');
+q=(await db.query('select get_guest_order_quote($1,$2) as q',[branch,JSON.stringify(items)])).rows[0].q;
+assert.equal(q.total,35);assert.equal(q.discount,7);
+await assert.rejects(db.query('select place_guest_order($1,$2,$3,$4,0)',[crypto.randomUUID(),branch,JSON.stringify(items),JSON.stringify(customer)]));
+const key=crypto.randomUUID();
+const args=[key,branch,JSON.stringify(items),JSON.stringify(customer),35];
+const receipt=(await db.query('select place_guest_order($1,$2,$3,$4,$5) as r',args)).rows[0].r;
+assert.equal(receipt.total,35);
+assert.deepEqual((await db.query('select place_guest_order($1,$2,$3,$4,$5) as r',args)).rows[0].r,receipt);
+await db.exec('reset role');
+assert.equal((await db.query('select free_quantity from order_items')).rows[0].free_quantity,1);
+assert.equal(Number((await db.query('select discount from orders')).rows[0].discount),7);
+assert.equal((await db.query('select quantity from branch_inventory where branch_id=$1 and variant_id=$2',[branch,variant])).rows[0].quantity,94);
+// Test the live quote + checkout path on a deterministic Tuesday, in this isolated database only.
+const migration=readFileSync(new URL('../migrations/202609180002_donut_offers.sql',import.meta.url),'utf8');
+let quoteFunction=migration.slice(migration.indexOf('create function public.get_guest_order_quote'),migration.indexOf('revoke all on function public.get_guest_order_quote'));
+quoteFunction=quoteFunction.replace('create function','create or replace function').replace("extract(isodow from now() at time zone 'Asia/Hebron')=2",'true');
+await db.exec(quoteFunction);
+await db.query('update branches set delivery_enabled=true,delivery_fee=5 where id=$1',[branch]);
+await db.exec('set role anon');
+const dozen=[{variant_id:variant,quantity:12}];
+q=(await db.query('select get_guest_order_quote($1,$2) as q',[branch,JSON.stringify(dozen)])).rows[0].q;
+assert.equal(q.is_tuesday,true);assert.equal(q.total,49);assert.equal(q.offer_code,'tuesday');
+const delivered=(await db.query('select place_guest_order($1,$2,$3,$4,$5) as r',[crypto.randomUUID(),branch,JSON.stringify(dozen),JSON.stringify({...customer,fulfillment:'delivery',address:'Test delivery address'}),54])).rows[0].r;
+assert.equal(delivered.total,54);
+await db.exec('reset role');
+// Cancelling restores all donuts, including the free ones.
+const owner='00000000-0000-0000-0000-000000000001';
+await db.query('insert into auth.users values ($1)',[owner]);
+await db.query("insert into staff_profiles values ($1,'Owner','owner',true)",[owner]);
+const id=(await db.query('select id from orders where order_number=$1',[delivered.order_number])).rows[0].id;
+await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
+await db.exec('set role authenticated');
+await db.query("select set_order_status($1,'cancelled')",[id]);
+await db.exec('reset role');
+assert.equal((await db.query('select quantity from branch_inventory where branch_id=$1 and variant_id=$2',[branch,variant])).rows[0].quantity,94);
+await db.query('update branch_inventory set quantity=5 where branch_id=$1 and variant_id=$2',[branch,variant]);
+await db.exec('set role anon');
+await assert.rejects(db.query('select get_guest_order_quote($1,$2)',[branch,JSON.stringify(items)]));
+await db.close();
+console.log('PASS: daily eligibility, Tuesday highest-seven pricing, best offer, no stacking, bundles, drinks exclusion, server price overrides, tampering, retry idempotency, stock, delivery fee, cancellation and private calculator.');

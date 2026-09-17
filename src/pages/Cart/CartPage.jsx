@@ -8,11 +8,10 @@ import { getBranchMenu } from '../../lib/supabase';
 import '../../components/menu/menu.css';
 
 export default function CartPage() {
-  const { cart, setCart, branch } = useCart();
+  const { cart, setCart, branch, locked, setLocked } = useCart();
   const { language } = useLanguage();
   const en = language === 'en';
   const [rows, setRows] = useState([]);
-  const [locked, setLocked] = useState(false);
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState(false);
   useEffect(() => {

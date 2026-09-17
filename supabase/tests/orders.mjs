@@ -6,7 +6,7 @@ await db.exec(`create role anon; create role authenticated; create schema auth;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
-for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql','migrations/202609180001_order_tracking.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
+for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql','migrations/202609180001_order_tracking.sql','migrations/202609180002_donut_offers.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
 const owner='00000000-0000-0000-0000-000000000001', staff='00000000-0000-0000-0000-000000000002';
 await db.query('insert into auth.users values ($1),($2)',[owner,staff]);
 await db.query("insert into staff_profiles values ($1,'Owner','owner',true),($2,'Staff','order_staff',true)",[owner,staff]);
