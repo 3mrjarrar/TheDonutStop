@@ -49,3 +49,11 @@ Both `/menu` and `/menu/` work, and old `/#menu` links redirect client-side to `
 The production JavaScript is approximately 93 KB gzip and CSS 5 KB gzip. Images retain their existing quality and are lazy-loaded in the catalog. The existing image library accounts for approximately 172 MB on disk; disk usage is distinct from server RAM. Google Fonts retains the existing external font stylesheet with `display=swap`. No state, UI, or translation libraries were added beyond React and React Router; Vite is build-only.
 
 References: [React Router layouts and Outlet](https://reactrouter.com/start/declarative/routing), [Vite static deployment](https://vite.dev/guide/static-deploy).
+
+## Guest order tracking
+
+Apply `supabase/migrations/202609180001_order_tracking.sql` after the existing migrations in the Supabase SQL editor before deploying this frontend. The guest-only RPC uses the random request UUID already generated at checkout and returns only order number, status, fulfillment, total, and branch names. It does not grant guests SELECT access to orders or expose customer details.
+
+A tracking card appears across the customer pages after checkout, polls every 5 seconds while active, and refreshes on window focus and reconnection. Tracking tokens and display data are stored in this browser's local storage, so tracking survives reloads and navigation on the same browser. It does not send SMS or browser push notifications. Admin acceptance maps to `preparing`; `ready` tells the customer pickup/delivery is ready; `completed` confirms fulfillment; `cancelled` shows cancellation. Finished cards can be dismissed.
+
+Run database regression checks with `PGLITE_MODULE=/path/to/@electric-sql/pglite/dist/index.js node supabase/tests/orders.mjs` when PGlite is available.

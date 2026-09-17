@@ -6,7 +6,7 @@ await db.exec(`create role anon; create role authenticated; create schema auth;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
-for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
+for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql','migrations/202609180001_order_tracking.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
 const owner='00000000-0000-0000-0000-000000000001', staff='00000000-0000-0000-0000-000000000002';
 await db.query('insert into auth.users values ($1),($2)',[owner,staff]);
 await db.query("insert into staff_profiles values ($1,'Owner','owner',true),($2,'Staff','order_staff',true)",[owner,staff]);
@@ -31,6 +31,14 @@ await assert.rejects(place([{variant_id:donut.id,quantity:0}],0));
 const key=crypto.randomUUID();
 const first=await place(items,total,key); assert.ok(first.order_number.startsWith('NAB-'));
 assert.deepEqual(await place(items,total,key),first);
+async function track(token) { return (await db.query('select get_guest_order_status($1) as tracked', [token])).rows[0].tracked; }
+const tracked = await track(key);
+assert.equal(tracked.status, 'new');
+assert.equal(tracked.fulfillment, 'pickup');
+assert.equal(tracked.order_number, first.order_number);
+assert.deepEqual(Object.keys(tracked).sort(), ['order_number','status','fulfillment','total','branch_name_ar','branch_name_en'].sort());
+assert.equal(await track(crypto.randomUUID()), null);
+assert.equal(await track(null), null);
 await assert.rejects(place(items,total+1,key));
 await assert.rejects(place(items,total)); // only one donut left
 await db.exec('reset role');
@@ -44,9 +52,12 @@ assert.equal((await db.query('select id from orders')).rows.length,1);
 await assert.rejects(db.query('select request_payload from orders'));
 await assert.rejects(db.query("select set_order_status($1,'completed')",[id]));
 await db.query("select set_order_status($1,'preparing')",[id]);
+await asUser(); assert.equal((await track(key)).status, 'preparing');
+await asUser(staff,'authenticated');
 await db.query("select set_order_status($1,'cancelled')",[id]);
 await db.query("select set_order_status($1,'cancelled')",[id]);
 await assert.rejects(db.query("select set_order_status($1,'preparing')",[id]));
+await asUser(); assert.equal((await track(key)).status, 'cancelled');
 await db.exec('reset role');
 assert.equal((await db.query('select quantity from branch_inventory where branch_id=$1 and variant_id=$2',[branch,donut.id])).rows[0].quantity,3);
 await db.query('update branch_inventory set manual_unavailable=true where branch_id=$1 and variant_id=$2',[branch,drink.id]);
@@ -62,8 +73,19 @@ await db.exec('reset role');
 await db.query('update branches set delivery_enabled=true,delivery_fee=5 where id=$1',[branch]);
 await db.query('update branch_inventory set manual_unavailable=false where branch_id=$1 and variant_id=$2',[branch,drink.id]);
 await asUser();
-const delivered=await place([{variant_id:drink.id,quantity:1}],Number(drink.price)+5,crypto.randomUUID(),{...customer,fulfillment:'delivery',address:'A valid address'});
+const deliveryKey=crypto.randomUUID();
+const delivered=await place([{variant_id:drink.id,quantity:1}],Number(drink.price)+5,deliveryKey,{...customer,fulfillment:'delivery',address:'A valid address'});
 assert.equal(Number(delivered.total),Number(drink.price)+5);
+assert.equal((await track(deliveryKey)).fulfillment, 'delivery');
+await db.exec('reset role');
+const deliveryId=(await db.query('select id from orders where request_id=$1',[deliveryKey])).rows[0].id;
+for (const status of ['preparing', 'ready', 'completed']) {
+  await asUser(owner,'authenticated');
+  await db.query('select set_order_status($1,$2)',[deliveryId,status]);
+  await asUser(); assert.equal((await track(deliveryKey)).status,status);
+}
+await assert.rejects(db.query('select request_id from orders'));
+
 await db.exec('reset role');await db.query('update branch_inventory set quantity=1 where branch_id=$1 and variant_id=$2',[branch,donut.id]);
 await asUser();
 const race=await Promise.allSettled([place([{variant_id:donut.id,quantity:1}],Number(donut.price),crypto.randomUUID(),{...customer,phone:'0581111111'}),place([{variant_id:donut.id,quantity:1}],Number(donut.price),crypto.randomUUID(),{...customer,phone:'0582222222'})]);

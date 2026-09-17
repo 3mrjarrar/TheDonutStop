@@ -5,6 +5,8 @@ import Home from '../pages/Home/Home';
 import Menu from '../pages/Menu/Menu';
 import NotFound from '../pages/NotFound/NotFound';
 
+import CartPage from '../pages/Cart/CartPage';
+
 const Admin = lazy(() => import('../pages/Admin/Admin'));
 
 export default function AppRoutes() {
@@ -14,6 +16,7 @@ export default function AppRoutes() {
       <Route element={<MainLayout />}>
         <Route index element={<Home />} />
         <Route path="menu" element={<Menu />} />
+        <Route path="cart" element={<CartPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

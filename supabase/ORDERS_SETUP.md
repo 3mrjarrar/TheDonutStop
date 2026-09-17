@@ -32,3 +32,9 @@ PGLITE_MODULE=/path/to/pglite/dist/index.js node supabase/tests/orders.mjs
 تتحقق من الصلاحيات والأسعار والكميات وإعادة المحاولة والإلغاء والتوصيل. اختبار طلبين على آخر قطعة يعمل في محرك PGlite الذي يسلسل الاستعلامات؛ يجب إجراء اختبار اتصالين مستقلين على PostgreSQL التجريبي قبل إطلاق استقبال الطلبات على نطاق واسع.
 
 يوجد حد خمسة طلبات لكل رقم هاتف خلال 15 دقيقة. هذا ليس بديلًا عن تحقق الهاتف أو حماية آلية من الروبوتات؛ يمكن تغييره بعد تحديد سياسة التشغيل، وإضافة حماية على بوابة الطلبات قبل الإطلاق العام.
+
+## Customer status tracking
+
+Run `migrations/202609180001_order_tracking.sql` in the Supabase SQL Editor after migration 004, then deploy the rebuilt frontend. No Realtime publication or anonymous table access is needed. Customers poll the restricted status RPC every 5 seconds using their private checkout request UUID; the card persists in the same browser across reloads.
+
+Use **قبول وبدء التحضير** to accept an order, **تم التجهيز — جاهز للاستلام/للتوصيل** when prepared, **إكمال الطلب** after fulfillment, and **رفض / إلغاء** to cancel. These transitions update the customer's card automatically.

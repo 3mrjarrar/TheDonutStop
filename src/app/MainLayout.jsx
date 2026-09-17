@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router';
 import Header from '../components/Header/Header';
+import OrderTracker from '../components/orders/OrderTracker';
 import Footer from '../components/Footer/Footer';
 import { useLanguage } from '../i18n/LanguageContext';
 export default function MainLayout() {
@@ -8,7 +9,8 @@ export default function MainLayout() {
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const menu = location.pathname.replace(/\/$/, '') === '/menu';
-  const missing = !['/', '/menu', '/menu/'].includes(location.pathname);
+  const cart = location.pathname.replace(/\/$/, '') === '/cart';
+  const missing = !['/', '/menu', '/menu/', '/cart', '/cart/'].includes(location.pathname);
   useEffect(() => {
     if (location.hash === '#menu') { navigate('/menu', { replace: true }); return; }
     const frame = requestAnimationFrame(() => {
@@ -19,10 +21,10 @@ export default function MainLayout() {
     return () => cancelAnimationFrame(frame);
   }, [location.pathname, location.hash, location.key, navigate]);
   return <>
-    <title>{missing ? '404 | The Donut Stop' : menu ? `${t('المنيو')} | The Donut Stop` : t('The Donut Stop | ذا دونات ستوب')}</title>
+    <title>{missing ? '404 | The Donut Stop' : cart ? `${language === 'en' ? 'Your cart' : 'سلة الطلب'} | The Donut Stop` : menu ? `${t('المنيو')} | The Donut Stop` : t('The Donut Stop | ذا دونات ستوب')}</title>
     <meta name="description" content={menu ? t('اختار فئتك وتصفّح الأصناف والأسعار.') : t('ذا دونات ستوب — دونات ومشروبات لكل لحظة حلوة.')} />
     {missing && <meta name="robots" content="noindex" />}
     <a className="skip-link" href="#top">{language === 'ar' ? 'انتقل إلى المحتوى' : 'Skip to content'}</a>
-    <Header /><main id="top" tabIndex={-1}><Outlet /></main><Footer />
+    <Header /><main id="top" tabIndex={-1}><OrderTracker /><Outlet /></main><Footer />
   </>;
 }

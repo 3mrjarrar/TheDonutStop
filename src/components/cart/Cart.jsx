@@ -1,13 +1,16 @@
 import { useRef, useState } from 'react';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { supabase } from '../../lib/supabase';
 import { isAvailable, tracksQuantity } from '../../lib/availability';
 import './cart.css';
+import { useOrderTracking } from '../orders/OrderTrackingContext';
 
 export default function Cart({ branch, cart, setCart, rows, en, locked, setLocked, refresh }) {
   const [checkout, setCheckout] = useState(false);
   const [delivery, setDelivery] = useState('pickup');
   const [error, setError] = useState('');
-  const [receipt, setReceipt] = useState(null);
+  const { trackOrder } = useOrderTracking();
   const [sending, setSending] = useState(false);
   const pending = useRef(null);
   const sendingRef = useRef(false);
@@ -33,7 +36,9 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
     try {
       const { data, error: problem } = await supabase.rpc('place_guest_order', pending.current);
       if (problem) throw problem;
-      setReceipt(data); setCart([]); setCheckout(false); pending.current = null; setLocked(false); refresh();
+      trackOrder({ ...data, requestId: pending.current.p_request_id, status: 'new', fulfillment: pending.current.p_customer.fulfillment, branch_name_ar: branch.name_ar, branch_name_en: branch.name_en });
+      setCart([]); setCheckout(false); pending.current = null; setLocked(false); refresh();
+      requestAnimationFrame(() => document.querySelector('.order-tracking')?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
     } catch (problem) {
       // Explicit database errors mean the transaction rolled back; a transport failure is ambiguous.
       const known = problem.code && /^P\d{4}$|^22\w{3}$|^23\w{3}$|^42501$|^40001$/.test(problem.code);
@@ -48,10 +53,9 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       }
     } finally { sendingRef.current = false; setSending(false); }
   }
-  if (receipt) return <section className="cart-panel" role="status"><h2>{en ? 'Order received' : 'تم استلام طلبك'}</h2><p><strong dir="ltr">{receipt.order_number}</strong> — {en ? 'We will prepare it shortly.' : 'سنقوم بتحضيره قريبًا.'}</p><p>{en ? 'From: ' : 'من فرع: '}{en ? branch.name_en : branch.name_ar}</p><p>{en ? 'Cash on receipt: ' : 'الدفع نقدًا عند الاستلام: '}{receipt.total} ₪</p><button className="tab" onClick={() => setReceipt(null)}>{en ? 'Continue browsing' : 'متابعة التصفح'}</button></section>;
   return <section className="cart-panel" aria-labelledby="cart-title"><h2 id="cart-title">{en ? 'Your cart' : 'سلة الطلب'}</h2><p>{en ? 'Your order is from ' : 'طلبك من فرع '}<strong>{en ? branch.name_en : branch.name_ar}</strong></p>
     {!cart.length ? <p>{en ? 'Your cart is empty.' : 'السلة فارغة.'}</p> : <>
-      <ul className="cart-lines">{cart.map(item => <li key={item.id}><div><strong>{item.name}</strong> {item.size !== 'standard' && `(${item.size})`}<p>{item.price} ₪ × {item.quantity}</p></div><div className="quantity-controls"><button type="button" disabled={locked} aria-label={`${en ? 'Decrease' : 'تقليل'} ${item.name}`} onClick={() => change(item.id,-1)}>−</button><span>{item.quantity}</span><button type="button" disabled={locked || !canIncrease(item)} aria-label={`${en ? 'Increase' : 'زيادة'} ${item.name}`} onClick={() => change(item.id,1)}>+</button><button type="button" disabled={locked} onClick={() => setCart(current => current.filter(value => value.id !== item.id))}>{en ? 'Remove' : 'حذف'}</button></div></li>)}</ul>
+      <ul className="cart-lines">{cart.map(item => <li key={item.id}><div><strong>{item.name}</strong> {item.size !== 'standard' && `(${item.size})`}<p>{item.price} ₪ × {item.quantity}</p></div><div className="quantity-controls"><button type="button" disabled={locked} aria-label={`${en ? 'Decrease' : 'تقليل'} ${item.name}`} onClick={() => change(item.id,-1)}><RemoveIcon /></button><span>{item.quantity}</span><button type="button" disabled={locked || !canIncrease(item)} aria-label={`${en ? 'Increase' : 'زيادة'} ${item.name}`} onClick={() => change(item.id,1)}><AddIcon /></button><button type="button" disabled={locked} onClick={() => setCart(current => current.filter(value => value.id !== item.id))}>{en ? 'Remove' : 'حذف'}</button></div></li>)}</ul>
       <p><strong>{en ? 'Total' : 'الإجمالي'}: {total.toFixed(2)} ₪</strong></p>
       {delivery === 'delivery' && <p>{en ? 'Delivery fee included' : 'يشمل رسوم التوصيل'}: {branch.delivery_fee} ₪</p>}
       {error && <p className="cart-error" role="alert">{error}</p>}
