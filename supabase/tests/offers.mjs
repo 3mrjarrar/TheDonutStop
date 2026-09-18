@@ -6,7 +6,7 @@ await db.exec(`create role anon; create role authenticated; create schema auth;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
-for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql','migrations/202609180001_order_tracking.sql','migrations/202609180002_donut_offers.sql','migrations/202609190001_managed_offers.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
+for (const file of ['migrations/202609170001_catalog.sql','seed.sql','migrations/202609170002_admin_inventory.sql','migrations/202609170003_drink_availability.sql','migrations/202609170004_orders.sql','migrations/202609180001_order_tracking.sql','migrations/202609180002_donut_offers.sql','migrations/202609190001_managed_offers.sql','migrations/202609190002_manage_all_offers.sql']) await db.exec(readFileSync(new URL('../'+file,import.meta.url),'utf8'));
 
 const line=(id,price,quantity=1,category='donuts')=>({variant_id:id,unit_price:price,quantity,category});
 async function calculate(lines,tuesday=false,enabled=['daily','tuesday']) { return (await db.query('select calculate_donut_offer($1,$2,$3) as quote',[JSON.stringify(lines),tuesday,enabled])).rows[0].quote; }
@@ -102,13 +102,19 @@ await asUser('', 'anon'); await assert.rejects(toggle(branch,'buy6get6',true,fal
 await asUser(staff); await assert.rejects(toggle(branch,'buy6get6',true,false));
 await asUser(manager);
 await assert.rejects(toggle(other,'buy6get6',true,false));
-await assert.rejects(toggle(branch,'daily',false,true));
-await assert.rejects(toggle(branch,'tuesday',false,true));
-await assert.rejects(toggle(branch,'morning',false,true));
+await toggle(branch,'daily',false,true);
+await toggle(branch,'daily',true,false);
+await assert.rejects(toggle(other,'daily',false,true));
+await toggle(branch,'tuesday',false,true);
+await toggle(branch,'tuesday',true,false);
+await assert.rejects(toggle(other,'tuesday',false,true));
+await toggle(branch,'morning',false,true);
+await toggle(branch,'morning',true,false);
+await assert.rejects(toggle(other,'morning',false,true));
 await assert.rejects(db.query("update branch_offers set enabled=true where branch_id=$1",[branch]));
 await toggle(branch,'buy6get6',true,false);
 await toggle(branch,'buy6get6',true,false); // retry creates no duplicate event
-assert.equal(Number((await db.query('select count(*) from offer_events')).rows[0].count),1);
+assert.equal(Number((await db.query('select count(*) from offer_events')).rows[0].count),7);
 await asUser(owner); for (const code of ['daily','tuesday','morning']) await toggle(branch,code,false,true);
 await toggle(other,'buy8get4',true,false); // owner may manage every branch
 await db.exec('reset role'); await db.query('update branch_inventory set quantity=100 where branch_id=$1 and variant_id=$2',[branch,variant]);

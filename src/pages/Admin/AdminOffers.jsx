@@ -26,17 +26,17 @@ export default function AdminOffers({ branch, branchName, role }) {
   return <section className="admin-panel">
     <div className="admin-toolbar"><h2>العروض — {branchName}</h2><a href="/#offers" target="_blank" rel="noreferrer">معاينة في الموقع ↗</a></div>
     <p>تفعيل العرض يُظهره للزبائن ويطبّق خصمه على طلبات هذا الفرع فورًا. تعطيله يُخفيه ويوقف الخصم للطلبات الجديدة. يُطبّق أكبر خصم فقط، دون جمع العروض، ويتكرر مع كل مجموعة مكتملة.</p>
-    <p>{role === 'owner' ? 'يمكنك التحكم بكل العروض؛ غيّر الفرع من أعلى الصفحة لإدارة عروض أي فرع.' : role === 'manager' ? 'يمكنك التحكم بالعروض الأربعة الجديدة لفروعك. العروض السابقة يتحكم بها المالك.' : 'يمكنك الاطلاع على حالة العروض. تعديلها متاح للمدير والمالك.'}</p>
+    <p>{role === 'owner' ? 'يمكنك التحكم بكل العروض؛ غيّر الفرع من أعلى الصفحة لإدارة عروض أي فرع.' : role === 'manager' ? 'يمكنك إظهار وإخفاء جميع العروض السبعة لفروعك.' : 'يمكنك الاطلاع على حالة العروض. تعديلها متاح للمدير والمالك.'}</p>
     {message && <p className="admin-success" role="status">{message}</p>}{failure && <p className="admin-error" role="alert">{failure}</p>}
     {loading ? <p role="status">جارٍ تحميل العروض…</p> : error ? <div role="alert"><p>تعذّر تحميل إعدادات العروض. تحقق من الاتصال وتطبيق تحديث قاعدة البيانات.</p><button onClick={refresh}>إعادة المحاولة</button></div> : <div className="admin-offers-grid">{offerCatalog.map(offer => {
       const current = rows.find(row => row.code === offer.code);
-      const allowed = role === 'owner' || (role === 'manager' && offer.isNew);
+      const allowed = role === 'owner' || role === 'manager';
       return <article className="admin-offer" key={offer.code}>
         <img src={`/assets/offers/${offer.image}.png`} alt={offerTitle(offer.code)} loading="lazy" />
         <div><span className={current?.enabled ? 'offer-enabled' : 'offer-disabled'}>{current?.enabled ? 'مفعّل · ظاهر للزبائن' : 'معطّل · مخفي'}</span><h3>{offerTitle(offer.code)}</h3><p>{offerDetails(offer)}</p>
           {offer.displayOnly && <p><strong>للعرض فقط — لا يغيّر حساب السلة.</strong></p>}
           <button type="button" role="switch" aria-checked={!!current?.enabled} aria-label={`${current?.enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer.code)}`} disabled={!!busy || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : current?.enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
-          {!allowed && <small>{offer.isNew ? 'للمدير والمالك فقط' : 'يتحكم به المالك فقط'}</small>}
+          {!allowed && <small>{'للمدير والمالك فقط'}</small>}
           {!current && <small>إعدادات هذا العرض غير متاحة لهذا الفرع.</small>}
         </div>
       </article>;
