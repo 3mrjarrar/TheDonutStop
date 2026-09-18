@@ -195,4 +195,45 @@ for (const code of ['daily','tuesday','morning']) {
 await asUser('', 'anon');
 assert.equal((await db.query("select code from branch_offers where code in ('daily','tuesday','morning') and enabled")).rows.length,0);
 console.log('PASS: legacy publication requires explicit admin activation, all three toggle on/off, newer campaigns preserved, cross-branch changes denied.');
+
+
+// Shared switches propagate pricing/visibility to all branches, excluding drinks at Terah.
+await db.exec('reset role');
+await db.exec(readFileSync(new URL('../migrations/202609190005_shared_offers.sql',import.meta.url),'utf8'));
+const sharedToggle=(code,enabled,previous)=>db.query('select set_shared_offer($1,$2,$3)',[code,enabled,previous]);
+assert.equal((await db.query('select count(*)::int as n from shared_offers')).rows[0].n,7);
+assert.equal((await db.query("select enabled from shared_offers where code='buy6get2'")).rows[0].enabled,true);
+assert.equal((await db.query("select count(*)::int as n from branch_offers where code='buy6get2' and not enabled")).rows[0].n,0);
+await asUser('', 'anon'); await assert.rejects(sharedToggle('daily',true,false));
+await asUser(staff); await assert.rejects(sharedToggle('daily',true,false));
+await asUser(manager);
+await assert.rejects(db.query("update shared_offers set enabled=true where code='daily'"));
+await sharedToggle('daily',true,false);
+assert.equal((await db.query("select count(*)::int as n from branch_offers where code='daily' and (not enabled or not admin_activated)")).rows[0].n,0);
+const eventsBeforeRetry=Number((await db.query('select count(*) from offer_events')).rows[0].count);
+await sharedToggle('daily',true,false);
+assert.equal(Number((await db.query('select count(*) from offer_events')).rows[0].count),eventsBeforeRetry);
+await assert.rejects(sharedToggle('daily',false,false),/Offer changed/);
+await sharedToggle('morning',true,false);
+const morningRows=(await db.query("select o.enabled,o.admin_activated,b.code from branch_offers o join branches b on b.id=o.branch_id where o.code='morning'")).rows;
+assert.ok(morningRows.some(row=>row.code==='TERI'));
+for (const row of morningRows) assert.equal(row.enabled,row.code!=='TERI');
+await sharedToggle('daily',false,true);
+assert.equal((await db.query("select count(*)::int as n from branch_offers where code='daily' and enabled")).rows[0].n,0);
+// Existing clients cannot accidentally restore branch-specific behavior.
+await toggle(branch,'daily',true,false);
+assert.equal((await db.query("select count(*)::int as n from branch_offers where code='daily' and not enabled")).rows[0].n,0);
+await db.exec('reset role');
+const addedBranch=(await db.query("insert into branches(code,name_ar,name_en,sort_order) values('TEST','اختبار','Test',99) returning id")).rows[0].id;
+assert.equal((await db.query("select enabled from branch_offers where branch_id=$1 and code='daily'",[addedBranch])).rows[0].enabled,true);
+assert.equal((await db.query("select enabled from branch_offers where branch_id=$1 and code='morning'",[addedBranch])).rows[0].enabled,true);
+await asUser(manager);
+for (const setting of (await db.query('select code,enabled from shared_offers')).rows) await sharedToggle(setting.code,false,setting.enabled);
+await asUser('', 'anon');
+assert.equal((await db.query('select code from branch_offers where enabled')).rows.length,0);
+assert.equal((await db.query('select code from shared_offers where enabled')).rows.length,0);
+await db.exec('reset role');
+await db.query('update staff_profiles set active=false where user_id=$1',[manager]);
+await asUser(manager); await assert.rejects(sharedToggle('daily',true,false));
+console.log('PASS: shared switches update every branch, drink offer excludes Terah, old clients stay synchronized, retries/audit/authorization preserved, new branches inherit shared settings, all-hidden returns zero offers.');
 await db.close();

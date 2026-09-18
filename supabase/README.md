@@ -59,3 +59,14 @@ admin switch. Hiding it removes its card entirely and stops its discount for new
 orders. Until this migration is applied, the frontend hides the original cards
 and reports the missing database update when attempting to activate them.
 The SQL update is also necessary to stop any old server-side discounts.
+
+## Shared offers across branches
+
+After migration 004, run `migrations/202609190005_shared_offers.sql` before deploying
+this frontend. It creates one shared switch per offer and applies it to every
+branch. Existing offers explicitly enabled in any active branch remain enabled
+and become shared. Offers hidden everywhere stay hidden. Morning coffee is always
+excluded from branch code TERI (Terah). Managers with an active branch assignment
+and owners can change shared settings; order staff cannot. New branches inherit
+the shared settings, and existing checkout pricing still reads synchronized
+branch offer rows. Apply this migration once.

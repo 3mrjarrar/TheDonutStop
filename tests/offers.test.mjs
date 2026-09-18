@@ -49,3 +49,12 @@ test('legacy default rows never create cards without explicit admin activation',
   assert.equal(isOfferEnabled(undefined), false);
   assert.deepEqual(visibleOffers([{code:'buy6get2',enabled:true}]).map(offer=>offer.code), ['buy6get2']);
 });
+
+import { offerAvailability } from '../src/lib/offerCatalog.js';
+test('shared offer labels include every branch except Terah for drinks', () => {
+  for (const offer of offerCatalog) {
+    assert.match(offerAvailability(offer), /جميع الفروع/);
+    assert.equal(offerAvailability(offer).includes('ما عدا الطيرة'), offer.code === 'morning');
+    assert.equal(offerAvailability(offer,true).includes('except Terah'), offer.code === 'morning');
+  }
+});
