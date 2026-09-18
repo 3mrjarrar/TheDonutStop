@@ -8,6 +8,7 @@ export const offerCatalog = [
   { code: 'morning', image: 'morning', displayOnly: true },
 ];
 export const findOffer = code => offerCatalog.find(offer => offer.code === code);
+export const visibleOffers = rows => offerCatalog.filter(offer => rows.some(row => row.code === offer.code && row.enabled === true));
 export function offerTitle(code, en = false) {
   const offer = findOffer(code);
   if (!offer) return en ? 'Offer' : 'عرض';

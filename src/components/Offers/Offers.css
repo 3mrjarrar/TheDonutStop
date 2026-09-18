@@ -31,3 +31,4 @@ html[dir="ltr"] .offer-copy{direction:ltr}
 .offer-copy p{max-width:340px;font-size:17px;line-height:1.65;margin:0}
 @media(max-width:650px){.offers{padding-block:36px}.offers-heading{margin-bottom:24px}.offer-row{grid-template-columns:1fr;gap:18px}.offer-row+.offer-row{margin-top:24px;padding-top:24px}.offer-copy{width:100%;max-width:300px;justify-self:center}.offer-copy h3{font-size:28px;margin:8px 0 10px}.offer-copy p{font-size:16px}.offer-poster{max-width:220px;border-radius:18px}}
 .offers-policy{text-align:center;margin:0 auto 30px;max-width:620px}.offer-copy .offer-branches{font-size:14px;margin-top:16px;color:#ffe1a3}.offer-poster{aspect-ratio:auto;object-fit:contain}
+.offers-empty{text-align:center;padding:32px 20px;border:1px solid #ffffff40;border-radius:20px;background:#ffffff0d}

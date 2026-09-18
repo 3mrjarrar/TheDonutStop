@@ -24,3 +24,14 @@ test('all four new bundles prompt at paid quantity and stop at full bundles', ()
     assert.ok(offerTitle(offer.code).includes(String(offer.free)));
   }
 });
+
+import { visibleOffers } from '../src/lib/offerCatalog.js';
+test('hiding every offer across every branch leaves no original or new cards', () => {
+  const rows = ['NAB','ICON','TERI'].flatMap(branch_id => offerCatalog.map(offer => ({branch_id, code:offer.code, enabled:false})));
+  assert.deepEqual(visibleOffers(rows), []);
+  assert.deepEqual(visibleOffers([]), []);
+  rows.find(row => row.branch_id === 'ICON' && row.code === 'daily').enabled = true;
+  assert.deepEqual(visibleOffers(rows).map(offer => offer.code), ['daily']);
+  rows.find(row => row.branch_id === 'ICON' && row.code === 'daily').enabled = false;
+  assert.deepEqual(visibleOffers(rows), []);
+});
