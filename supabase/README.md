@@ -1,5 +1,17 @@
 # Supabase foundation
 
+## Remove automatically enabled offers
+
+After migrations `202609190001_managed_offers.sql` and
+`202609190002_manage_all_offers.sql`, run
+`migrations/202609190003_remove_automatic_offers.sql` in the SQL Editor.
+The original migration enabled the three old offers in every existing branch.
+This correction disables offers that have no recorded admin action, while
+preserving explicit admin choices and order history. New branches already start
+with all offers disabled. Managers can then enable any of the seven offers for
+their assigned branches. The homepage shows an offer only while it is enabled
+in at least one active branch, and lists those branches below it.
+
 This is the catalog/inventory foundation, not a completed ordering system.
 The menu reads branch inventory from Supabase after branch selection. Selection is saved on the device, and branch-image links can select a branch. Availability refreshes every 30 seconds and on window focus. Cart, guest cash checkout, and branch order handling are implemented; apply migration 004 using ORDERS_SETUP.md.
 
@@ -35,3 +47,15 @@ Disable public staff sign-up before launching admin authentication; create the
 first owner through a trusted administrative setup, never from browser inputs.
 
 The user reported applying the SQL successfully. Read-only verification returned all three branches and 96 inventory variants for Nablus, all at zero stock. Only the publishable key is available locally; it cannot execute schema migrations.
+
+## Explicit activation for the original three offers
+
+Run `migrations/202609190004_explicit_offer_activation.sql` once before deploying
+this frontend. It starts daily, Tuesday and morning offers hidden at every branch,
+even if they were previously enabled, and adds explicit activation metadata.
+The four newer campaign settings and existing orders are preserved.
+An owner or assigned manager can then add any original offer back with its normal
+admin switch. Hiding it removes its card entirely and stops its discount for new
+orders. Until this migration is applied, the frontend hides the original cards
+and reports the missing database update when attempting to activate them.
+The SQL update is also necessary to stop any old server-side discounts.

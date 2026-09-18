@@ -26,7 +26,8 @@ export function useOffers(branchId = null) {
         queued = false;
         try {
           if (!supabase) throw new Error('Not configured');
-          let request = supabase.from('branch_offers').select('branch_id,code,enabled,branches!inner(name_ar,name_en,active)').eq('branches.active', true);
+          // Read optional activation metadata without breaking older database schemas.
+          let request = supabase.from('branch_offers').select('*,branches!inner(name_ar,name_en,active)').eq('branches.active', true);
           if (branchId) request = request.eq('branch_id', branchId);
           const { data, error } = await request;
           if (error) throw error;

@@ -3,12 +3,21 @@ export const offerCatalog = [
   { code: 'buy7get3', buy: 7, free: 3, image: 'buy7get3', isNew: true },
   { code: 'buy8get4', buy: 8, free: 4, image: 'buy8get4', isNew: true },
   { code: 'buy6get6', buy: 6, free: 6, image: 'buy6get6', isNew: true },
-  { code: 'daily', buy: 5, free: 1, image: 'daily', eligiblePrices: [6, 7] },
-  { code: 'tuesday', buy: 7, free: 5, image: 'tuesday', tuesdayOnly: true },
-  { code: 'morning', image: 'morning', displayOnly: true },
+  { code: 'daily', buy: 5, free: 1, image: 'daily', eligiblePrices: [6, 7], requiresActivation: true },
+  { code: 'tuesday', buy: 7, free: 5, image: 'tuesday', tuesdayOnly: true, requiresActivation: true },
+  { code: 'morning', image: 'morning', displayOnly: true, requiresActivation: true },
 ];
 export const findOffer = code => offerCatalog.find(offer => offer.code === code);
-export const visibleOffers = rows => offerCatalog.filter(offer => rows.some(row => row.code === offer.code && row.enabled === true));
+export function isOfferEnabled(row) {
+  const offer = findOffer(row?.code);
+  return !!offer && row.enabled === true && (!offer.requiresActivation || row.admin_activated === true);
+}
+export function visibleOffers(rows) {
+  // The catalog supplies presentation only; it must never create a visible offer.
+  const enabledCodes = new Set(rows.filter(isOfferEnabled).map(row => row.code));
+  return [...enabledCodes].map(findOffer).filter(Boolean)
+    .sort((a, b) => offerCatalog.indexOf(a) - offerCatalog.indexOf(b));
+}
 export function offerTitle(code, en = false) {
   const offer = findOffer(code);
   if (!offer) return en ? 'Offer' : 'عرض';

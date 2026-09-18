@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { offerCatalog, offerTitle, offerDetails } from '../../lib/offerCatalog';
+import { offerCatalog, isOfferEnabled, offerTitle, offerDetails } from '../../lib/offerCatalog';
 import { useOffers } from '../../lib/useOffers';
 
 export default function AdminOffers({ branch, branchName, role }) {
@@ -11,11 +11,16 @@ export default function AdminOffers({ branch, branchName, role }) {
   const saving = useRef(false);
   async function toggle(offer, current) {
     if (saving.current) return;
+    if (offer.requiresActivation && current.admin_activated === undefined) {
+      setFailure('يلزم تطبيق تحديث تفعيل العروض في قاعدة البيانات قبل إضافة هذا العرض.');
+      return;
+    }
     saving.current = true; setBusy(offer.code); setMessage(''); setFailure('');
     try {
-      const { error: problem } = await supabase.rpc('set_branch_offer', { p_branch: branch, p_code: offer.code, p_enabled: !current.enabled, p_expected_enabled: current.enabled });
+      const enabled = isOfferEnabled(current);
+      const { error: problem } = await supabase.rpc('set_branch_offer', { p_branch: branch, p_code: offer.code, p_enabled: !enabled, p_expected_enabled: current.enabled });
       if (problem) throw problem;
-      setMessage(`${current.enabled ? 'تم تعطيل وإخفاء' : 'تم تفعيل وإظهار'} عرض ${offerTitle(offer.code)} في ${branchName}.`);
+      setMessage(`${enabled ? 'تم تعطيل وإخفاء' : 'تم تفعيل وإظهار'} عرض ${offerTitle(offer.code)} في ${branchName}.`);
       window.dispatchEvent(new Event('donut-offers-changed'));
       refresh();
     } catch (problem) {
@@ -30,12 +35,13 @@ export default function AdminOffers({ branch, branchName, role }) {
     {message && <p className="admin-success" role="status">{message}</p>}{failure && <p className="admin-error" role="alert">{failure}</p>}
     {loading ? <p role="status">جارٍ تحميل العروض…</p> : error ? <div role="alert"><p>تعذّر تحميل إعدادات العروض. تحقق من الاتصال وتطبيق تحديث قاعدة البيانات.</p><button onClick={refresh}>إعادة المحاولة</button></div> : <div className="admin-offers-grid">{offerCatalog.map(offer => {
       const current = rows.find(row => row.code === offer.code);
+      const enabled = isOfferEnabled(current);
       const allowed = role === 'owner' || role === 'manager';
       return <article className="admin-offer" key={offer.code}>
         <img src={`/assets/offers/${offer.image}.png`} alt={offerTitle(offer.code)} loading="lazy" />
-        <div><span className={current?.enabled ? 'offer-enabled' : 'offer-disabled'}>{current?.enabled ? 'مفعّل · ظاهر للزبائن' : 'معطّل · مخفي'}</span><h3>{offerTitle(offer.code)}</h3><p>{offerDetails(offer)}</p>
+        <div><span className={enabled ? 'offer-enabled' : 'offer-disabled'}>{enabled ? 'مفعّل · ظاهر للزبائن' : 'معطّل · مخفي'}</span><h3>{offerTitle(offer.code)}</h3><p>{offerDetails(offer)}</p>
           {offer.displayOnly && <p><strong>للعرض فقط — لا يغيّر حساب السلة.</strong></p>}
-          <button type="button" role="switch" aria-checked={!!current?.enabled} aria-label={`${current?.enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer.code)}`} disabled={!!busy || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : current?.enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
+          <button type="button" role="switch" aria-checked={enabled} aria-label={`${enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer.code)}`} disabled={!!busy || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
           {!allowed && <small>{'للمدير والمالك فقط'}</small>}
           {!current && <small>إعدادات هذا العرض غير متاحة لهذا الفرع.</small>}
         </div>

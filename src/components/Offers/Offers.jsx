@@ -1,7 +1,7 @@
 import './Offers.css';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useOffers } from '../../lib/useOffers';
-import { visibleOffers, offerTitle, offerDetails } from '../../lib/offerCatalog';
+import { visibleOffers, isOfferEnabled, offerTitle, offerDetails } from '../../lib/offerCatalog';
 
 export default function Offers() {
   const { t, language } = useLanguage();
@@ -14,7 +14,7 @@ export default function Offers() {
       <p className="offers-policy">{en ? 'Available at the listed branches. The best eligible discount applies automatically; offers cannot be combined.' : 'العروض متاحة في الفروع المذكورة. يُطبّق أكبر خصم مستحق تلقائيًا دون جمع العروض.'}</p>
       {visible.map(offer => <article className="offer-row" key={offer.code} aria-labelledby={`${offer.code}-offer-title`}>
         <img className="offer-poster" src={`/assets/offers/${offer.image}.png`} loading="lazy" decoding="async" alt={offerTitle(offer.code, en)} />
-        <div className="offer-copy"><span className="eyebrow">{offer.displayOnly ? (en ? 'Morning offer' : 'عرض الصباح') : offer.tuesdayOnly ? (en ? 'Tuesdays' : 'كل ثلاثاء') : (en ? 'Active offer' : 'عرض مفعّل')}</span><h3 id={`${offer.code}-offer-title`}>{offerTitle(offer.code, en)}</h3><p>{offerDetails(offer, en)}</p><p className="offer-branches">{en ? 'At: ' : 'في فروع: '}{rows.filter(row => row.code === offer.code && row.enabled).map(row => en ? row.branches.name_en : row.branches.name_ar).join(' · ')}</p></div>
+        <div className="offer-copy"><span className="eyebrow">{offer.displayOnly ? (en ? 'Morning offer' : 'عرض الصباح') : offer.tuesdayOnly ? (en ? 'Tuesdays' : 'كل ثلاثاء') : (en ? 'Active offer' : 'عرض مفعّل')}</span><h3 id={`${offer.code}-offer-title`}>{offerTitle(offer.code, en)}</h3><p>{offerDetails(offer, en)}</p><p className="offer-branches">{en ? 'At: ' : 'في فروع: '}{rows.filter(row => row.code === offer.code && isOfferEnabled(row)).map(row => en ? row.branches.name_en : row.branches.name_ar).join(' · ')}</p></div>
       </article>)}
     </>}
   </div></section>;
