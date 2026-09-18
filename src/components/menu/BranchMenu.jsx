@@ -6,6 +6,8 @@ import './menu.css';
 import { useCart } from '../cart/CartContext';
 import QuantityDialog from '../cart/QuantityDialog';
 import { isAvailable } from '../../lib/availability';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 
 const categories = [['donuts', 'دونات', 'Donuts'], ['hot', 'مشروبات ساخنة', 'Hot drinks'], ['cold', 'مشروبات باردة', 'Cold drinks'], ['blends', 'سموذي وفرابيه', 'Smoothies & frappes']];
 const storageKey = 'donut-stop-branch';
@@ -79,13 +81,23 @@ export default function BranchMenu() {
       setCart(current => current.some(item => item.id === selected.id) ? current.map(item => item.id === selected.id ? { ...item, quantity: item.quantity + quantity } : item) : [...current, { ...selected, quantity }]);
       setSelected(null);
     }} />}
-    <div className="branch-picker">
-      <h2>{en ? 'Choose the branch you want to order from' : 'اختر الفرع الذي تريد الطلب منه'}</h2>
-      <div className="tabs" role="group" aria-label={en ? 'Branch' : 'الفرع'}>
-        {branches.map(item => <button type="button" key={item.id} disabled={locked} className={`tab${branch?.id === item.id ? ' active' : ''}`} aria-pressed={branch?.id === item.id} onClick={() => choose(item.code)}>{en ? item.name_en : item.name_ar}</button>)}
+    <section className="branch-picker" aria-labelledby="branch-picker-title">
+      <div className="branch-picker-intro">
+        <span className="branch-picker-eyebrow">{en ? 'YOUR ORDER STARTS HERE' : 'طلبك الحلو يبدأ هون'}</span>
+        <h2 id="branch-picker-title">{en ? 'Pick your branch' : 'من أي فرع نحلّي يومك؟'}</h2>
+        <p>{en ? 'Choose a branch to explore its menu and availability.' : 'اختار الفرع وتصفّح المنيو والأصناف المتوفرة فيه.'}</p>
       </div>
-      {branch && <p>{en ? 'Menu for: ' : 'منيو فرع: '}<strong>{en ? branch.name_en : branch.name_ar}</strong></p>}
-    </div>
+      <div className="branch-options" role="group" aria-label={en ? 'Branch' : 'الفرع'}>
+        {branches.map(item => {
+          const active = branch?.id === item.id;
+          return <button type="button" key={item.id} disabled={locked} className={`branch-option${active ? ' is-selected' : ''}`} aria-pressed={active} onClick={() => choose(item.code)}>
+            <span className="branch-option-icon"><StorefrontOutlinedIcon /></span>
+            <span className="branch-option-copy"><strong>{en ? item.name_en : item.name_ar}</strong><span>{active ? (en ? 'Selected branch' : 'الفرع المختار') : (en ? 'Explore the menu' : 'تصفّح المنيو')}</span></span>
+            <span className="branch-option-check" aria-hidden="true">{active && <CheckRoundedIcon />}</span>
+          </button>;
+        })}
+      </div>
+    </section>
     {error ? <div role="alert"><p>{en ? 'We could not load availability. Please try again.' : 'تعذّر تحميل التوفر. يرجى المحاولة مجددًا.'}</p><button className="tab" onClick={() => setRetry(value => value + 1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : loading ? <p role="status">{en ? 'Loading…' : 'جارٍ التحميل…'}</p> : branch ? <>
       <div className="tabs" role="group" aria-label={en ? 'Menu categories' : 'فئات المنيو'}>{categories.map(([key, ar, english]) => <button type="button" className={`tab${category === key ? ' active' : ''}`} aria-pressed={category === key} key={key} onClick={() => setCategory(key)}>{en ? english : ar}</button>)}</div>
       <div id="menu-list" className={`menu-grid ${category === 'donuts' ? 'donut-grid' : 'hot-drink-grid'}`}>

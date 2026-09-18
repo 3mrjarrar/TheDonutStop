@@ -20,7 +20,7 @@ test('built pages expose crawlable content and menu navigation before JavaScript
   assert.equal((home.match(/href="\/menu"/g) || []).length, 3);
   assert.doesNotMatch(home, /href="#menu"/);
   assert.match(menuPage, /aria-current="page"/);
-  assert.match(menuPage, /اختر الفرع الذي تريد الطلب منه/);
+  assert.match(menuPage, /من أي فرع نحلّي يومك؟/);
   assert.doesNotMatch(menuPage, /feature-card donut-card/);
   for (const code of ['NAB', 'ICON', 'TERI']) assert.ok(home.includes('/menu?branch=' + code));
   for (const html of [home, menuPage]) {

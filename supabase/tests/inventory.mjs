@@ -42,5 +42,32 @@ for (const action of ['restock','waste','count']) await assert.rejects(db.query(
 for (const [action, previous] of [['unavailable',false],['available',true]]) await db.query('select public.adjust_inventory($1,$2,$3,0,$4,0,$5,$6)',[branch,drink,action,'drink status',previous,crypto.randomUUID()]);
 const drinkStock = (await db.query('select quantity,manual_unavailable from branch_inventory where branch_id=$1 and variant_id=$2',[branch,drink])).rows[0];
 assert.equal(drinkStock.quantity,0); assert.equal(drinkStock.manual_unavailable,false);
+// Apply the first-entry migration over existing stock and audit history.
+await db.exec('reset role');
+await db.exec(readFileSync(new URL('../migrations/202609180003_inventory_first_entry.sql', import.meta.url), 'utf8'));
+assert.equal((await db.query('select stock_initialized from branch_inventory where branch_id=$1 and variant_id=$2', [branch, variant])).rows[0].stock_initialized, true);
+await asUser(ids[0]);
+const fresh = (await db.query("select v.id from product_variants v join products p on p.id=v.product_id where p.category='donuts' and v.id <> $1 limit 1", [variant])).rows[0].id;
+const call = (action, amount, expected, reason = '', key = crypto.randomUUID(), unavailable = false) => db.query('select public.adjust_inventory($1,$2,$3,$4,$5,$6,$7,$8)', [branch, fresh, action, amount, reason, expected, unavailable, key]);
+const firstKey = crypto.randomUUID();
+await call('restock', 12, 0, '', firstKey);
+// The original no-reason request must still be safely retryable after initialization.
+await call('restock', 12, 0, '', firstKey);
+for (const [action, amount] of [['restock', 6], ['count', 10], ['waste', 2], ['unavailable', 0], ['available', 0]]) {
+  await assert.rejects(call(action, amount, 12), /reason is required/);
+  await assert.rejects(call(action, amount, 12, '   '), /reason is required/);
+}
+await call('restock', 6, 12, 'دفعة إضافية');
+await call('waste', 18, 18, 'تالف');
+assert.equal((await db.query('select stock_initialized from branch_inventory where branch_id=$1 and variant_id=$2', [branch, fresh])).rows[0].stock_initialized, true);
+await assert.rejects(call('restock', 6, 0), /reason is required/);
+await call('restock', 6, 0, 'دفعة جديدة');
+await assert.rejects(call('count', 4, 0, 'تصحيح'), /Stock changed/);
+await call('count', 4, 6, 'تصحيح');
+await call('unavailable', 0, 4, 'إيقاف مؤقت');
+await call('available', 0, 4, 'عودة البيع', crypto.randomUUID(), true);
+const audit = (await db.query('select reason from inventory_events where request_id=$1', [firstKey])).rows[0];
+assert.equal(audit.reason, 'إدخال أولي');
+console.log('PASS: first entry without reason, required reasons for every later change, whitespace rejection, retry safety, depletion persistence, audit and backfill.');
 await db.close();
 console.log('PASS: anonymous/order-staff denial, branch isolation, direct-write denial, role escalation denial, idempotency, stale stock, waste bounds, stock actions, audit visibility, deactivation.');

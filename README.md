@@ -32,6 +32,8 @@ Add or edit products in `src/components/menu/menuData.js`, including both langua
 
 ## Production hosting and SEO
 
+For the updated inventory editor, apply `supabase/migrations/202609180003_inventory_first_entry.sql` before publishing the frontend. The first donut stock entry for each branch/product needs no reason; every subsequent stock or availability change requires a reason, including additional deliveries and restocking after depletion. Existing quantities and historical stock entries initialize this flag. This is a persistent rule, not a daily reset. Drink availability changes retain their required reason. The migration enforces the rule in the database and preserves permissions, audit records, concurrency checks, and safe retries.
+
 Deploy only `dist/` after `npm run build`. No Node/React process is needed in production: any static web server/CDN can serve it, leaving the 512 MB RAM allowance available for other services. Run the build locally or in CI if the host's build environment is constrained; build memory is separate from serving memory.
 
 The build prerenders `/` and `/menu/` with titles, descriptions, headings, navigation, and all donut cards before JavaScript loads. React hydrates those pages and handles same-tab navigation with the browser History API. Other menu categories are interactive and require JavaScript. Unknown routes show a 404 component with `noindex`; configure the host to return HTTP 404 for unknown URLs when supported.

@@ -47,8 +47,28 @@ html[dir="ltr"] .feature-info h3,html[dir="ltr"] .menu-item h3{text-align:left}
 .hot-drink-card .drink-description{font-size:14px;line-height:1.65;margin-top:6px}
 .hot-drink-card .feature-info>div{min-width:0}
 .menu-section h1{font-size:clamp(32px,4vw,52px);line-height:1.2;letter-spacing:-.035em;margin:12px 0 0}.menu-section h1 span{color:#e68199}.menu-section{min-height:65vh}#menu-list:focus-visible{outline:2px solid var(--teal);outline-offset:5px}
-.branch-picker{padding:24px;background:#fff;border:1px solid #b9cfca;border-radius:20px;margin-bottom:28px}
-.branch-picker h2{font-size:22px;margin:0 0 18px}.branch-picker .tabs{margin-bottom:12px}
+.branch-picker{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(0,1.65fr);align-items:center;gap:32px;padding:30px;background:#fff;border:1px solid #e0e9e3;border-radius:24px;margin-bottom:32px;box-shadow:0 8px 28px #19474a06}
+.branch-picker-eyebrow{display:block;color:#9c3e5b;font-size:12px;font-weight:800;letter-spacing:.04em;margin-bottom:8px}
+.branch-picker h2{color:var(--dark);font-size:clamp(21px,2vw,28px);line-height:1.5;margin:0 0 6px}
+.branch-picker-intro p{color:#607775;font-size:14px;line-height:1.8;margin:0;max-width:340px}
+.branch-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.branch-option{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:16px;min-width:0;text-align:start;font:inherit;color:var(--dark);background:#fafbf8;border:1px solid #dce5df;border-radius:18px;padding:18px;cursor:pointer;transition:background .18s,border-color .18s,box-shadow .18s,transform .18s}
+.branch-option-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:#eaf0e9;color:#24595a}
+.branch-option-icon svg{font-size:24px}
+.branch-option-copy{display:flex;flex-direction:column;gap:5px;min-width:0}
+.branch-option-copy strong{font-size:17px;line-height:1.5;overflow-wrap:anywhere}
+.branch-option-copy>span{font-size:12px;color:#607775}
+.branch-option-check{position:absolute;inset-inline-end:16px;top:18px;display:grid;place-items:center;width:20px;height:20px;border:1px solid #bdcdc4;border-radius:50%}
+.branch-option-check svg{font-size:15px}
+.branch-option.is-selected{background:#19494b;color:#fff;border-color:#19494b;box-shadow:0 6px 16px #19494b1a}
+.branch-option.is-selected .branch-option-icon{background:#ffffff16;color:#ffd282}
+.branch-option.is-selected .branch-option-copy>span{color:#d2e5de}
+.branch-option.is-selected .branch-option-check{background:#ffd282;color:#19494b;border-color:#ffd282}
+.branch-option:disabled{opacity:.6;cursor:not-allowed}
+@media(hover:hover){.branch-option:hover:not(:disabled){transform:translateY(-2px);border-color:#6d9690;box-shadow:0 7px 18px #19494b12}}
+@media(max-width:1050px){.branch-picker{grid-template-columns:1fr;gap:22px}.branch-picker-intro p{max-width:none}}
+@media(max-width:600px){.branch-picker{padding:20px;border-radius:20px;gap:18px}.branch-options{grid-template-columns:1fr;gap:10px}.branch-option{flex-direction:row;align-items:center;gap:14px;padding:14px 16px;padding-inline-end:48px}.branch-option-icon{flex-shrink:0}.branch-option-copy{gap:2px}.branch-option-check{top:50%;transform:translateY(-50%)}.branch-option-copy strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.branch-option{transition:none}.branch-option:hover:not(:disabled){transform:none}}
 .stock-status{margin:0 16px 16px;font-weight:800;border-radius:12px;padding:10px 14px}
 .stock-status.available{color:#17623b;background:#e4f5e9}.stock-status.unavailable{color:#a02b35;background:#ffe9eb}
 .branch-picker button:focus-visible,.hours-grid a:focus-visible{outline:3px solid #b33762;outline-offset:4px}
