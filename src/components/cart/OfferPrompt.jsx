@@ -4,7 +4,7 @@ import { useCart } from './CartContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getBranchMenu } from '../../lib/supabase';
 import { isAvailable } from '../../lib/availability';
-import { offerPrompt } from '../../lib/offers';
+import { offerPrompt, isOfferEligible } from '../../lib/offers';
 import { findOffer, offerTitle } from '../../lib/offerCatalog';
 import './cart.css';
 
@@ -29,13 +29,13 @@ function OfferDialog({ offer, branch, cart, setCart, en, onClose }) {
     const variant = row.product_variants;
     const existing = cart.find(item => item.id === variant.id);
     const price = Number(row.price_override ?? variant.price);
-    return variant.products.category === 'donuts' && isAvailable('donuts',row)
+    return isOfferEligible(variant.products) && isAvailable('donuts',row)
       && (!findOffer(offer.type)?.eligiblePrices || findOffer(offer.type).eligiblePrices.includes(price))
       && (existing?.quantity || 0) < Math.min(99,row.quantity) && (existing || cart.length < 50);
   }).sort((a,b) => Number(a.price_override ?? a.product_variants.price) - Number(b.price_override ?? b.product_variants.price));
   function add(row) {
     const variant = row.product_variants;
-    setCart(current => current.some(item => item.id === variant.id) ? current.map(item => item.id === variant.id ? {...item,quantity:item.quantity+1} : item) : [...current,{id:variant.id,name:variant.products.name,size:variant.size,category:'donuts',price:Number(row.price_override ?? variant.price),quantity:1}]);
+    setCart(current => current.some(item => item.id === variant.id) ? current.map(item => item.id === variant.id ? {...item,quantity:item.quantity+1} : item) : [...current,{id:variant.id,name:variant.products.name,slug:variant.products.slug,size:variant.size,category:'donuts',price:Number(row.price_override ?? variant.price),quantity:1}]);
   }
   return <dialog ref={dialog} className="quantity-dialog offer-dialog" aria-labelledby="offer-dialog-title" onCancel={onClose} onClick={event => { if (event.target === dialog.current) onClose(); }}>
     <button className="dialog-close" type="button" aria-label={en ? 'Close' : 'إغلاق'} onClick={onClose}><CloseIcon /></button>

@@ -58,3 +58,18 @@ test('shared offer labels include every branch except Terah for drinks', () => {
     assert.equal(offerAvailability(offer,true).includes('except Terah'), offer.code === 'morning');
   }
 });
+
+test('mini donuts never count toward any offer or appear as eligible additions', async () => {
+  const { isOfferEligible } = await import('../src/lib/offers.js');
+  const { offerDetails } = await import('../src/lib/offerCatalog.js');
+  for (const item of [{name:'Mini Donut Bites'}, {name:'MINI DONUT'}, {name:'ميني دونات'}, {name:'Renamed',slug:'donuts-mini-donut-bites'}]) {
+    const mini = {...item,category:'donuts',quantity:99};
+    assert.equal(isOfferEligible(mini),false);
+    for (const offer of offerCatalog.filter(offer => !offer.displayOnly)) {
+      assert.equal(offerPrompt([mini],true,[offer.code]),null);
+      assert.equal(offerPrompt([...donuts(offer.buy-1),mini],true,[offer.code]),null);
+      assert.equal(offerPrompt([...donuts(offer.buy),mini],true,[offer.code]).count,offer.buy);
+    }
+  }
+  for (const offer of offerCatalog) assert.match(offerDetails(offer),/الميني دونات مستثناة/);
+});

@@ -25,6 +25,10 @@ export function offerTitle(code, en = false) {
   return `${offer.tuesdayOnly ? (en ? 'Tuesday: ' : 'الثلاثاء: ') : ''}${en ? `Buy ${offer.buy}, get ${offer.free} free` : `اشتري ${offer.buy} وخذ ${offer.free} مجانًا`}`;
 }
 export function offerDetails(offer, en = false) {
+  const exclusion = en ? ' Mini donuts are excluded from all offers and do not count toward offer quantities.' : ' الميني دونات مستثناة من جميع العروض ولا تُحسب ضمن عدد حبات العرض.';
+  return offerBaseDetails(offer, en) + exclusion;
+}
+function offerBaseDetails(offer, en = false) {
   if (offer.displayOnly) return en ? '7:30–11 AM. In-store promotion; not applied to online orders.' : 'من 7:30 حتى 11 صباحًا. عرض داخل الفرع، لا يُحسب تلقائيًا في الطلبات الإلكترونية.';
   if (offer.eligiblePrices) return en ? 'Choose 6 donuts; one priced at ₪6 or ₪7 is free. Repeats with each complete bundle.' : 'اختر 6 حبات؛ واحدة من أصناف 6 أو 7 شيكل مجانًا. يتكرر مع كل مجموعة مكتملة.';
   return en ? `Choose ${offer.buy + offer.free} donuts at any price; the ${offer.free} lowest-priced are free. Repeats with each complete bundle.${offer.tuesdayOnly ? ' Tuesdays only.' : ''}` : `اختر ${offer.buy + offer.free} ${offer.buy + offer.free <= 10 ? 'حبات' : 'حبة'} من أي سعر؛ ${offer.free} من الحبات الأقل سعرًا مجانًا. يتكرر مع كل مجموعة مكتملة.${offer.tuesdayOnly ? ' كل ثلاثاء فقط.' : ''}`;

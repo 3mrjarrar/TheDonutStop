@@ -70,3 +70,17 @@ excluded from branch code TERI (Terah). Managers with an active branch assignmen
 and owners can change shared settings; order staff cannot. New branches inherit
 the shared settings, and existing checkout pricing still reads synchronized
 branch offer rows. Apply this migration once.
+
+## Branch price editing
+
+Apply `migrations/202609190006_branch_prices.sql` before deploying the price editor. In Admin → Inventory, owners and assigned branch managers can use **تعديل السعر** on donuts or individual drink sizes. Order staff cannot change prices. Each edit sets `branch_inventory.price_override` for the selected branch and variant; menus, quotes and checkout already use that value. Previously placed orders retain their recorded prices.
+
+The `set_branch_price` RPC validates a nonnegative price with at most two decimal places, requires a reason, checks the expected current price under a row lock, and handles retries by request ID. Changes are recorded in `price_events`, readable only by staff allowed to manage that branch. Direct client writes remain forbidden. Icon Mall's drink controls remain hidden.
+
+Run the isolated database checks with `PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js node supabase/tests/prices.mjs` (or install PGlite in the test environment and omit the variable). These cover permissions, direct-write denial, audit/retries, invalid and stale prices, branch isolation, and the guest quote using the updated price.
+
+## Mini donut exclusion
+
+Apply `migrations/202609190007_exclude_mini_donuts.sql` before publishing the updated offer UI. Mini Donut Bites are paid items only: they neither count toward offer bundles nor receive free quantities, regardless of branch, price overrides, repeated bundles or other cart contents. The calculator checks product identity in the database instead of trusting client eligibility. All offer descriptions, including the in-store morning offer, disclose the exclusion. The cart also excludes minis from offer prompts and suggested additions.
+
+Run `PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js node supabase/tests/mini-donuts.mjs` to check every calculated offer, mixed/repeated bundles, changed mini prices, and actual quotes/orders in every branch.

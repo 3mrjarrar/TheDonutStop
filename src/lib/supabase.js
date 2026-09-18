@@ -18,7 +18,7 @@ export async function getBranchMenu(branchId) {
   if (!supabase) throw new Error('Supabase is not configured.');
   const { data, error } = await supabase.from('branch_inventory').select(`
     quantity, manual_unavailable, price_override,
-    product_variants!inner(id, size, price, products!inner(id, name, category, description_ar, description_en, image_path, sort_order))
+    product_variants!inner(id, size, price, products!inner(id, name, slug, category, description_ar, description_en, image_path, sort_order))
   `).eq('branch_id', branchId).eq('carried', true);
   if (error) throw error;
   return data;

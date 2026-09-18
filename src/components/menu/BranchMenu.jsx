@@ -120,7 +120,7 @@ export default function BranchMenu() {
                 setCart([]);
               }
               setCartBranch(branch);
-              setSelected({ id: variant.id, name: product.name, size: variant.size, category: product.category, price: Number(row.price_override ?? variant.price) });
+              setSelected({ id: variant.id, name: product.name, slug: product.slug, size: variant.size, category: product.category, price: Number(row.price_override ?? variant.price) });
             }}>{en ? 'Add to cart' : 'أضف للسلة'}</button>
             <p className={`stock-status ${available ? 'available' : 'unavailable'}`}>{available ? (en ? 'Available' : 'متوفر') : (en ? 'Unavailable' : 'غير متوفر')}</p>
           </article>;
