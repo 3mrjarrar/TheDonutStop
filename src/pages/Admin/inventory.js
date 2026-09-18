@@ -14,3 +14,9 @@ export const inventoryPrice = row => Number(row.price_override ?? row.product_va
 export const byInventoryPrice = (a, b) => inventoryPrice(a) - inventoryPrice(b)
   || a.product_variants.products.name.localeCompare(b.product_variants.products.name)
   || a.product_variants.size.localeCompare(b.product_variants.size);
+
+export function inventoryProductImage(product) {
+  if (product.image_path) return product.image_path;
+  const folder = product.category === 'hot' ? 'hot-drinks' : 'cold-drinks';
+  return `/assets/${folder}/${encodeURIComponent(product.name)}.png`;
+}
