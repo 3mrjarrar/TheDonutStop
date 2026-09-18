@@ -27,11 +27,25 @@ test('all four new bundles prompt at paid quantity and stop at full bundles', ()
 
 import { visibleOffers } from '../src/lib/offerCatalog.js';
 test('hiding every offer across every branch leaves no original or new cards', () => {
-  const rows = ['NAB','ICON','TERI'].flatMap(branch_id => offerCatalog.map(offer => ({branch_id, code:offer.code, enabled:false})));
+  const rows = ['NAB','ICON','TERI'].flatMap(branch_id => offerCatalog.map(offer => ({branch_id, code:offer.code, enabled:false, admin_activated:true})));
   assert.deepEqual(visibleOffers(rows), []);
   assert.deepEqual(visibleOffers([]), []);
   rows.find(row => row.branch_id === 'ICON' && row.code === 'daily').enabled = true;
   assert.deepEqual(visibleOffers(rows).map(offer => offer.code), ['daily']);
   rows.find(row => row.branch_id === 'ICON' && row.code === 'daily').enabled = false;
   assert.deepEqual(visibleOffers(rows), []);
+});
+
+import { isOfferEnabled } from '../src/lib/offerCatalog.js';
+test('legacy default rows never create cards without explicit admin activation', () => {
+  const rows = ['daily','tuesday','morning'].map(code => ({code,enabled:true}));
+  assert.deepEqual(visibleOffers(rows), []);
+  assert.deepEqual(visibleOffers(rows.map(row=>({...row,admin_activated:false}))), []);
+  for (const row of rows) {
+    assert.equal(isOfferEnabled(row), false);
+    assert.deepEqual(visibleOffers([{...row,admin_activated:true}]).map(offer=>offer.code), [row.code]);
+    assert.deepEqual(visibleOffers([{...row,admin_activated:true,enabled:false}]), []);
+  }
+  assert.equal(isOfferEnabled(undefined), false);
+  assert.deepEqual(visibleOffers([{code:'buy6get2',enabled:true}]).map(offer=>offer.code), ['buy6get2']);
 });

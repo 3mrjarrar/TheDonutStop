@@ -142,5 +142,57 @@ assert.equal((await db.query('select quantity from branch_inventory where branch
 await db.query('update staff_profiles set active=false where user_id=$1',[manager]);
 await asUser(manager); await assert.rejects(toggle(branch,'buy6get2',true,false));
 console.log('PASS: four new bundles, repetition, least-price freebies, best-only pricing, branch defaults, owner/manager permissions, audit, disabled offers, immediate quote changes, stale-checkout rejection and new-offer cancellation.');
-await db.close();
+
 console.log('PASS: daily eligibility, Tuesday highest-seven pricing, best offer, no stacking, bundles, drinks exclusion, server price overrides, tampering, retry idempotency, stock, delivery fee, cancellation and private calculator.');
+
+// Reproduce automatically enabled legacy offers, then apply the corrective migration.
+await db.exec('reset role');
+const automaticBefore = Number((await db.query(`select count(*) from branch_offers b where enabled and not exists (select 1 from offer_events e where e.branch_id=b.branch_id and e.code=b.code)`)).rows[0].count);
+assert.ok(automaticBefore > 0);
+const explicitBefore = (await db.query(`select b.branch_id,b.code,b.enabled from branch_offers b where exists (select 1 from offer_events e where e.branch_id=b.branch_id and e.code=b.code) order by b.branch_id,b.code`)).rows;
+const correction = readFileSync(new URL('../migrations/202609190003_remove_automatic_offers.sql',import.meta.url),'utf8');
+await db.exec(correction);
+assert.equal(Number((await db.query(`select count(*) from branch_offers b where enabled and not exists (select 1 from offer_events e where e.branch_id=b.branch_id and e.code=b.code)`)).rows[0].count),0);
+assert.deepEqual((await db.query(`select b.branch_id,b.code,b.enabled from branch_offers b where exists (select 1 from offer_events e where e.branch_id=b.branch_id and e.code=b.code) order by b.branch_id,b.code`)).rows, explicitBefore);
+await asUser(owner);
+for (const setting of (await db.query('select branch_id,code from branch_offers where enabled')).rows) await toggle(setting.branch_id,setting.code,false,true);
+await asUser('', 'anon');
+assert.equal((await db.query('select code from branch_offers where enabled')).rows.length,0);
+await asUser(owner);
+for (const code of ['daily','tuesday','morning']) {
+ await toggle(other,code,true,false);
+ await asUser('', 'anon');
+ assert.deepEqual((await db.query('select code from branch_offers where enabled')).rows.map(row=>row.code),[code]);
+ await asUser(owner);
+ await toggle(other,code,false,true);
+}
+await db.exec('reset role');
+await db.exec(correction);
+assert.equal((await db.query('select code from branch_offers where enabled')).rows.length,0);
+console.log('PASS: automatic legacy offers removed, explicit admin choices preserved, all-hidden public result empty, and each legacy offer can be explicitly enabled and hidden.');
+
+
+
+
+// Explicit publication resets legacy defaults and preserves the newer campaigns.
+await db.exec('reset role');
+await db.query('update staff_profiles set active=true where user_id=$1',[manager]);
+await asUser(owner);
+await toggle(other,'daily',true,false);
+await toggle(other,'buy6get2',true,false);
+await db.exec('reset role');
+await db.exec(readFileSync(new URL('../migrations/202609190004_explicit_offer_activation.sql',import.meta.url),'utf8'));
+assert.equal((await db.query("select code from branch_offers where code in ('daily','tuesday','morning') and (enabled or admin_activated)")).rows.length,0);
+assert.equal((await db.query("select enabled from branch_offers where branch_id=$1 and code='buy6get2'",[other])).rows[0].enabled,true);
+await asUser(manager);
+for (const code of ['daily','tuesday','morning']) {
+ await toggle(branch,code,true,false);
+ assert.deepEqual((await db.query('select enabled,admin_activated from branch_offers where branch_id=$1 and code=$2',[branch,code])).rows[0],{enabled:true,admin_activated:true});
+ await assert.rejects(toggle(other,code,true,false));
+ await toggle(branch,code,false,true);
+ assert.deepEqual((await db.query('select enabled,admin_activated from branch_offers where branch_id=$1 and code=$2',[branch,code])).rows[0],{enabled:false,admin_activated:false});
+}
+await asUser('', 'anon');
+assert.equal((await db.query("select code from branch_offers where code in ('daily','tuesday','morning') and enabled")).rows.length,0);
+console.log('PASS: legacy publication requires explicit admin activation, all three toggle on/off, newer campaigns preserved, cross-branch changes denied.');
+await db.close();
