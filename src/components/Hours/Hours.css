@@ -5,5 +5,9 @@
 .hours-section .section-heading h2{font-size:clamp(32px,3.5vw,46px)}
 .hours-section .section-heading>p{max-width:260px;line-height:1.6}
 .hours-grid{display:grid;grid-template-columns:repeat(3,minmax(0,260px));justify-content:center;gap:clamp(20px,3vw,48px)}
-.hours-grid img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:24px;box-shadow:0 8px 25px #264c3f12}
+.hours-grid a{display:block;border-radius:24px;transition:transform .28s ease,box-shadow .28s ease;will-change:transform}
+.hours-grid img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;border-radius:inherit;box-shadow:0 8px 25px #264c3f12;transition:filter .28s ease}
+@media(hover:hover){.hours-grid a:hover{transform:translateY(-10px) scale(1.025);box-shadow:0 20px 38px #19494b29}.hours-grid a:hover img{filter:saturate(1.08) brightness(1.02)}}
+.hours-grid a:active{transform:translateY(-3px) scale(.995)}
 @media(max-width:650px){.section.hours-section{padding-block:36px}.hours-grid{grid-template-columns:1fr;max-width:240px;margin-inline:auto;gap:20px}.hours-grid img{border-radius:20px}}
+@media(prefers-reduced-motion:reduce){.hours-grid a,.hours-grid img{transition:none}.hours-grid a:hover,.hours-grid a:active{transform:none}}
