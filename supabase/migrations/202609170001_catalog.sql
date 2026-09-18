@@ -97,6 +97,6 @@ create policy own_assignments on public.staff_branches for select to authenticat
 insert into public.branches (code, name_ar, name_en, sort_order) values
   ('NAB', 'نابلس', 'Nablus', 1),
   ('ICON', 'Icon Mall', 'Icon Mall', 2),
-  ('TERI', 'الطيرة', 'Teri', 3);
+  ('TERI', 'الطيرة', 'Terah', 3);
 
 commit;

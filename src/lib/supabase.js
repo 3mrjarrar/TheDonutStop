@@ -11,7 +11,7 @@ export async function getBranches() {
   const { data, error } = await supabase.from('branches')
     .select('id, code, name_ar, name_en, delivery_enabled, delivery_fee').eq('active', true).order('sort_order');
   if (error) throw error;
-  return data;
+  return data.map(branch => branch.code === 'TERI' ? { ...branch, name_en: 'Terah' } : branch);
 }
 
 export async function getBranchMenu(branchId) {
