@@ -20,7 +20,9 @@ export default function BranchMenu() {
   const [branches, setBranches] = useState([]);
   const [branch, setBranch] = useState(null);
   const [rows, setRows] = useState([]);
-  const [category, setCategory] = useState('donuts');
+  const [selectedCategory, setCategory] = useState('donuts');
+  const branchCategories = branch?.code === 'ICON' ? categories.filter(([key]) => key === 'donuts') : categories;
+  const category = branch?.code === 'ICON' ? 'donuts' : selectedCategory;
   const [sizes, setSizes] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -99,7 +101,7 @@ export default function BranchMenu() {
       </div>
     </section>
     {error ? <div role="alert"><p>{en ? 'We could not load availability. Please try again.' : 'تعذّر تحميل التوفر. يرجى المحاولة مجددًا.'}</p><button className="tab" onClick={() => setRetry(value => value + 1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : loading ? <p role="status">{en ? 'Loading…' : 'جارٍ التحميل…'}</p> : branch ? <>
-      <div className="tabs" role="group" aria-label={en ? 'Menu categories' : 'فئات المنيو'}>{categories.map(([key, ar, english]) => <button type="button" className={`tab${category === key ? ' active' : ''}`} aria-pressed={category === key} key={key} onClick={() => setCategory(key)}>{en ? english : ar}</button>)}</div>
+      <div className="tabs" role="group" aria-label={en ? 'Menu categories' : 'فئات المنيو'}>{branchCategories.map(([key, ar, english]) => <button type="button" className={`tab${category === key ? ' active' : ''}`} aria-pressed={category === key} key={key} onClick={() => setCategory(key)}>{en ? english : ar}</button>)}</div>
       <div id="menu-list" className={`menu-grid ${category === 'donuts' ? 'donut-grid' : 'hot-drink-grid'}`}>
         {[...products.values()].sort((a, b) => a.sort_order - b.sort_order).map((product, index) => {
           const variants = product.variants.sort((a, b) => ({ S: 0, L: 1 }[a.product_variants.size] ?? 0) - ({ S: 0, L: 1 }[b.product_variants.size] ?? 0));

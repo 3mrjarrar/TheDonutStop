@@ -32,7 +32,10 @@ export default function Admin() {
   const [revision, setRevision] = useState(0);
   const [recovery, setRecovery] = useState(false);
   const [section, setSection] = useState('orders');
-  const [inventoryType, setInventoryType] = useState('donuts');
+  const [requestedInventoryType, setInventoryType] = useState('donuts');
+  const selected = branches.find(item => item.id === branch);
+  const inventoryTypes = selected?.code === 'ICON' ? [['donuts', 'الدونات']] : [['donuts', 'الدونات'], ['drinks', 'المشروبات']];
+  const inventoryType = selected?.code === 'ICON' ? 'donuts' : requestedInventoryType;
   const [drinkType, setDrinkType] = useState('mojito');
   const [newCount, setNewCount] = useState(0);
   const [notice, setNotice] = useState(null);
@@ -142,7 +145,6 @@ export default function Admin() {
   const visibleEvents = events.filter(item => visibleRows.some(row => row.variant_id === item.variant_id));
   const sectionTitle = { orders: 'الطلبات', inventory: 'المخزون', offers: 'العروض' }[section];
   function openInventory(row, action = 'restock') { setEdit({ row, action, requestId: crypto.randomUUID() }); }
-  const selected = branches.find(item => item.id === branch);
   return <main className={`admin-shell${session && profile && !recovery ? ' admin-dashboard' : ''}`} dir="rtl">
     <title>لوحة الإدارة | The Donut Stop</title><meta name="robots" content="noindex,nofollow" />
     {session && profile && !recovery && <aside className="admin-sidebar"><Link className="admin-brand" to="/"><img src="/assets/logo.jpg" alt="" /><span>The Donut Stop<small>لوحة الإدارة</small></span></Link><nav aria-label="أقسام لوحة الإدارة">{[['orders','الطلبات',ReceiptLongIcon],['inventory','المخزون',Inventory2OutlinedIcon],['offers','العروض',LocalOfferOutlinedIcon]].map(([key,label,Icon]) => <button type="button" key={key} disabled={busy || (key === 'inventory' && profile.role === 'order_staff')} className={section === key ? 'is-active' : ''} aria-current={section === key ? 'page' : undefined} onClick={() => { setSection(key); setEdit(null); }}><Icon /><span>{label}</span>{key === 'orders' && newCount > 0 && <b className="admin-count">{newCount}</b>}</button>)}</nav><div className="admin-sidebar-footer"><span>{profile.name}</span><small>{selected?.name_ar}</small><Link to="/">العودة للموقع ↗</Link></div></aside>}
@@ -155,12 +157,12 @@ export default function Admin() {
       <label>كلمة المرور<input name="password" type="password" autoComplete="current-password" dir="ltr" required /></label>
       <button disabled={busy || !supabase}>{busy ? 'جارٍ التنفيذ…' : 'تسجيل الدخول'}</button><button type="button" className="secondary" disabled={busy || !supabase} onClick={reset}>نسيت كلمة المرور</button>
     </form> : <>
-      {profile && <section className="admin-branch-bar"><div><strong>مرحبًا، {profile.name}</strong><p>إدارة يومك، من الطلب إلى التسليم.</p></div><label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setMessage(''); setNotice(null); setNewCount(0); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label>{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
+      {profile && <section className="admin-branch-bar"><div><strong>مرحبًا، {profile.name}</strong><p>إدارة يومك، من الطلب إلى التسليم.</p></div><label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setEdit(null); setRows([]); setSearch(''); setMessage(''); setNotice(null); setNewCount(0); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label>{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
       {notice && <div className="admin-notification" role="alert"><NotificationsActiveOutlinedIcon /><div><strong>وصل طلب جديد!</strong><p>{notice.count > 1 ? `${notice.count} طلبات جديدة` : notice.number}</p></div><button onClick={() => { setSection('orders'); setNotice(null); }}>عرض الطلبات</button><button className="secondary" aria-label="إغلاق الإشعار" onClick={() => setNotice(null)}>إغلاق</button></div>}
       {profile && branch && <div hidden={section !== 'orders'}><Orders key={branch} branch={branch} onOrders={handleOrders} onChange={() => setRevision(value => value + 1)} /></div>}
       {profile && branch && section === 'offers' && <AdminOffers key={branch} branch={branch} branchName={selected?.name_ar} role={profile.role} />}
       {section === 'inventory' && <>
-      <div className="admin-inventory-tabs" role="group" aria-label="نوع المخزون">{[['donuts','الدونات'],['drinks','المشروبات']].map(([key,label]) => <button key={key} aria-pressed={inventoryType === key} className={inventoryType === key ? 'is-active' : 'secondary'} disabled={busy} onClick={() => { setInventoryType(key); setSearch(''); setEdit(null); }}>{label}</button>)}</div>
+      <div className="admin-inventory-tabs" role="group" aria-label="نوع المخزون">{inventoryTypes.map(([key,label]) => <button key={key} aria-pressed={inventoryType === key} className={inventoryType === key ? 'is-active' : 'secondary'} disabled={busy} onClick={() => { setInventoryType(key); setSearch(''); setEdit(null); }}>{label}</button>)}</div>
       {inventoryType === 'drinks' && <div className="admin-drink-tabs" role="group" aria-label="أنواع المشروبات">{drinkTypes.map(([key,label]) => <button type="button" key={key} aria-pressed={drinkType === key} className={drinkType === key ? 'is-active' : 'secondary'} disabled={busy} onClick={() => { setDrinkType(key); setSearch(''); setEdit(null); }}>{label}</button>)}</div>}
       <div className="admin-toolbar inventory-toolbar"><label>بحث عن صنف<input type="search" placeholder={inventoryType === 'donuts' ? 'ابحث في الدونات…' : 'ابحث في المشروبات…'} value={search} onChange={event => setSearch(event.target.value)} /></label><button disabled={busy || loading} onClick={() => setRevision(value => value + 1)}>تحديث المخزون</button></div>
       {loading ? <p role="status">جارٍ تحميل المخزون…</p> : profile && profile.role !== 'order_staff' && branch && <>
