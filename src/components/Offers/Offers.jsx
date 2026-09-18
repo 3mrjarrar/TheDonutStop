@@ -1,23 +1,21 @@
 import './Offers.css';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { useOffers } from '../../lib/useOffers';
+import { offerCatalog, offerTitle, offerDetails } from '../../lib/offerCatalog';
 
 export default function Offers() {
   const { t, language } = useLanguage();
-  return (<section className="offers" id="offers" aria-labelledby="offers-title">
-<div className="offers-showcase">
-<header className="offers-heading"><span className="eyebrow">{t("شارك الحلو مع الكل")}</span><h2 id="offers-title">{t("عروض بتحلّي يومك")}</h2></header>
-<article className="offer-row" aria-labelledby="morning-offer-title">
-<img className="offer-poster" src="/assets/offers/morning.png" width="1086" height="1448" loading="lazy" decoding="async" alt={t("عرض دونات وقهوة بـ12 شيكل، من 7:30 حتى 11 صباحًا.")} />
-<div className="offer-copy"><span className="eyebrow">{t("صباحك أحلى")}</span><h3 id="morning-offer-title">{t("دونات + قهوة")}<br /><em>{t("بـ12 شيكل")}</em></h3><p>{t("ابدأ يومك بوقفة حلوة: دونات وقهوة من 7:30 حتى 11 صباحًا.")}</p></div>
-</article>
-<article className="offer-row" aria-labelledby="tuesday-offer-title">
-<img className="offer-poster" src="/assets/offers/tuesday.png" width="1086" height="1448" loading="lazy" decoding="async" alt={t("كل ثلاثاء: 7 عليك و5 علينا.")} />
-<div className="offer-copy"><span className="eyebrow">{t("كل ثلاثاء")}</span><h3 id="tuesday-offer-title">{t("7 عليك،")}<br /><em>{t("و5 علينا!")}</em></h3><p>{language === 'en' ? 'Tuesdays only: choose 12 donuts at any price and pay for the most expensive 7. The better offer applies; offers cannot be combined.' : 'كل ثلاثاء: اختر 12 حبة من أي سعر وادفع ثمن أغلى 7 فقط. نطبّق العرض الأفضل لك دون جمع العرضين.'}</p></div>
-</article>
-<article className="offer-row" aria-labelledby="daily-offer-title">
-<img className="offer-poster" src="/assets/offers/daily.png" width="1086" height="1448" loading="lazy" decoding="async" alt={t("اشترِ 5 دونات واحصل على واحدة مجانًا.")} />
-<div className="offer-copy"><span className="eyebrow">{t("كل يوم")}</span><h3 id="daily-offer-title">{t("اختار 5،")}<br /><em>{t("والسادسة علينا!")}</em></h3><p>{language === 'en' ? 'Buy 5 donuts and choose your free sixth donut from the ₪6 and ₪7 varieties.' : 'اطلب 5 حبات واختر السادسة مجانًا من أصناف الدونات بسعر 6 أو 7 شيكل.'}</p></div>
-</article>
-</div>
-</section>);
+  const en = language === 'en';
+  const { rows, loading, error, refresh } = useOffers();
+  const visible = offerCatalog.filter(offer => rows.some(row => row.code === offer.code && row.enabled));
+  return <section className="offers" id="offers" aria-labelledby="offers-title"><div className="offers-showcase">
+    <header className="offers-heading"><span className="eyebrow">{t('شارك الحلو مع الكل')}</span><h2 id="offers-title">{t('عروض بتحلّي يومك')}</h2></header>
+    {loading ? <p role="status">{en ? 'Loading current offers…' : 'جارٍ تحميل العروض الحالية…'}</p> : error ? <div role="status"><p>{en ? 'Current offers could not be loaded.' : 'تعذّر تحميل العروض الحالية.'}</p><button className="tab" onClick={refresh}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : !visible.length ? <p>{en ? 'No active offers right now. Check back soon!' : 'لا توجد عروض مفعّلة حاليًا. ترقّب جديدنا!'}</p> : <>
+      <p className="offers-policy">{en ? 'Available at the listed branches. The best eligible discount applies automatically; offers cannot be combined.' : 'العروض متاحة في الفروع المذكورة. يُطبّق أكبر خصم مستحق تلقائيًا دون جمع العروض.'}</p>
+      {visible.map(offer => <article className="offer-row" key={offer.code} aria-labelledby={`${offer.code}-offer-title`}>
+        <img className="offer-poster" src={`/assets/offers/${offer.image}.png`} loading="lazy" decoding="async" alt={offerTitle(offer.code, en)} />
+        <div className="offer-copy"><span className="eyebrow">{offer.displayOnly ? (en ? 'Morning offer' : 'عرض الصباح') : offer.tuesdayOnly ? (en ? 'Tuesdays' : 'كل ثلاثاء') : (en ? 'Active offer' : 'عرض مفعّل')}</span><h3 id={`${offer.code}-offer-title`}>{offerTitle(offer.code, en)}</h3><p>{offerDetails(offer, en)}</p><p className="offer-branches">{en ? 'At: ' : 'في فروع: '}{rows.filter(row => row.code === offer.code && row.enabled).map(row => en ? row.branches.name_en : row.branches.name_ar).join(' · ')}</p></div>
+      </article>)}
+    </>}
+  </div></section>;
 }

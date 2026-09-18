@@ -1,15 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { offerPrompt } from '../src/lib/offers.js';
+import { offerCatalog, offerTitle } from '../src/lib/offerCatalog.js';
+import { existsSync } from 'node:fs';
 const donuts = quantity => [{category:'donuts',quantity}];
-test('offer prompts count donuts only and guide complete bundles', () => {
-  assert.equal(offerPrompt([{category:'hot',quantity:5}],false),null);
-  assert.equal(offerPrompt(donuts(4),false),null);
-  assert.deepEqual(offerPrompt(donuts(5),false),{type:'daily',remaining:1,count:5});
-  assert.equal(offerPrompt(donuts(6),false),null);
-  assert.deepEqual(offerPrompt(donuts(11),false),{type:'daily',remaining:1,count:11});
-  assert.deepEqual(offerPrompt(donuts(5),true),{type:'daily',remaining:1,count:5});
-  assert.deepEqual(offerPrompt(donuts(7),true),{type:'tuesday',remaining:5,count:7});
-  assert.deepEqual(offerPrompt(donuts(11),true),{type:'tuesday',remaining:1,count:11});
-  assert.equal(offerPrompt(donuts(12),true),null);
+test('prompts never advertise disabled offers and count donuts only', () => {
+  assert.equal(offerPrompt(donuts(11),true),null);
+  assert.equal(offerPrompt(donuts(11),true,[]),null);
+  assert.equal(offerPrompt([{category:'hot',quantity:5}],false,['daily']),null);
+  assert.equal(offerPrompt(donuts(4),false,['daily']),null);
+  assert.deepEqual(offerPrompt(donuts(5),false,['daily']),{type:'daily',remaining:1,count:5});
+  assert.equal(offerPrompt(donuts(6),false,['daily']),null);
+  assert.deepEqual(offerPrompt(donuts(11),false,['daily']),{type:'daily',remaining:1,count:11});
+  assert.deepEqual(offerPrompt(donuts(7),true,['tuesday']),{type:'tuesday',remaining:5,count:7});
+  assert.equal(offerPrompt(donuts(7),false,['tuesday']),null);
+  assert.equal(offerPrompt(donuts(12),true,['tuesday']),null);
+});
+test('all four new bundles prompt at paid quantity and stop at full bundles', () => {
+  for (const offer of offerCatalog.filter(offer => offer.isNew)) {
+    assert.deepEqual(offerPrompt(donuts(offer.buy),false,[offer.code]),{type:offer.code,remaining:offer.free,count:offer.buy});
+    assert.equal(offerPrompt(donuts(offer.buy+offer.free),false,[offer.code]),null);
+    assert.ok(existsSync(`public/assets/offers/${offer.image}.png`));
+    assert.ok(offerTitle(offer.code).includes(String(offer.free)));
+  }
 });

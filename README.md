@@ -59,3 +59,15 @@ Apply `supabase/migrations/202609180001_order_tracking.sql` after the existing m
 A tracking card appears across the customer pages after checkout, polls every 5 seconds while active, and refreshes on window focus and reconnection. Tracking tokens and display data are stored in this browser's local storage, so tracking survives reloads and navigation on the same browser. It does not send SMS or browser push notifications. Admin acceptance maps to `preparing`; `ready` tells the customer pickup/delivery is ready; `completed` confirms fulfillment; `cancelled` shows cancellation. Finished cards can be dismissed.
 
 Run database regression checks with `PGLITE_MODULE=/path/to/@electric-sql/pglite/dist/index.js node supabase/tests/orders.mjs` when PGlite is available.
+
+## Managed branch offers
+
+Apply `supabase/migrations/202609190001_managed_offers.sql` after the existing migrations, then deploy the rebuilt frontend. New campaigns (6+2, 7+3, 8+4, 6+6) start disabled in every existing branch; existing daily, Tuesday and morning offers retain their enabled behavior. New branches start with all offers disabled.
+
+Managers toggle only the four new campaigns in their assigned branches. Owners toggle all seven offers in any branch using the branch selector. Order staff have read-only access. Changes are recorded in `offer_events`; clients cannot write offer settings directly.
+
+Enabled campaigns appear on the homepage with their participating branches. Pricing uses branch settings in the database: all new campaigns include every donut price, the cheapest units are free, full bundles repeat, and only the largest discount applies. Daily 5+1 retains its ₪6/₪7 free-item rule; 7+5 retains its Tuesday schedule in Asia/Hebron. Morning coffee remains display-only. Existing orders retain their original discounts when an offer is disabled.
+
+Offer updates invalidate open storefronts and carts through Supabase Realtime, with a five-second polling fallback and refresh on focus. Checkout locks offer settings during pricing and rejects an outdated expected total. The migration adds `branch_offers` to `supabase_realtime` when that publication exists. No active offers are hardcoded into prerendered HTML, preventing disabled posters from flashing on load.
+
+New poster files are under `public/assets/offers/`; the built-in image generation prompt for the 6+6 design is documented in that directory's `README.md`.

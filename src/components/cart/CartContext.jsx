@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { orderItems } from '../../lib/offers';
+import { watchOffers } from '../../lib/useOffers';
 
 const CartContext = createContext(null);
 export function CartProvider({ children }) {
@@ -13,19 +14,25 @@ export function CartProvider({ children }) {
   useEffect(() => {
     let active = true;
     let running = false;
+    let queued = false;
     if (!cart.length || !branch) { setResult(null); return; }
     const refresh = async () => {
-      if (running) return;
+      if (running) { queued = true; return; }
       running = true;
-      try {
-        const { data, error } = await supabase.rpc('get_guest_order_quote', { p_branch: branch.id, p_items: orderItems(cart) });
-        if (error) throw error;
-        if (active) setResult({ signature, data, error: false });
-      } catch { if (active) setResult({ signature, data: null, error: true }); }
-      finally { running = false; }
+      do {
+        queued = false;
+        try {
+          const { data, error } = await supabase.rpc('get_guest_order_quote', { p_branch: branch.id, p_items: orderItems(cart) });
+          if (error) throw error;
+          if (active && !queued) setResult({ signature, data, error: false });
+        } catch { if (active) setResult({ signature, data: null, error: true }); }
+      } while (active && queued);
+      running = false;
     };
-    refresh(); const timer = setInterval(refresh,30000); window.addEventListener('focus',refresh);
-    return () => { active = false; clearInterval(timer); window.removeEventListener('focus',refresh); };
+    const invalidate = () => { if (active) { setResult(null); refresh(); } };
+    const unwatch = watchOffers(branch.id, invalidate);
+    refresh(); const timer = setInterval(refresh,5000); window.addEventListener('focus',invalidate);
+    return () => { active = false; unwatch(); clearInterval(timer); window.removeEventListener('focus',invalidate); };
   }, [signature, revision]);
   const current = result?.signature === signature ? result : null;
   return <CartContext.Provider value={{ cart, setCart, branch, setBranch, locked, setLocked,
