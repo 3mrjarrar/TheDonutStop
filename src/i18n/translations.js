@@ -55,6 +55,8 @@ export const englishTranslations = {
   'مجموعة من أصناف الدونات': 'A selection of our donuts',
   'دونات دبي بالفستق': 'Dubai donut with pistachio',
   'دونات بحشوة اللوتس': 'Lotus-filled donut',
+  'دونات ستروبيري مع كريم': 'Strawberry jam and cream donut',
+  'دونات بحشوة الأوريو': 'Oreo-filled donut',
   'دونات أوريجينال جليز': 'Original glazed donut',
   'THE DONUT STOP ✦ لحظات أحلى ✦ DONUTS & COFFEE ✦ THE DONUT STOP ✦ لحظات أحلى ✦ DONUTS & COFFEE ✦': 'THE DONUT STOP ✦ SWEETER MOMENTS ✦ DONUTS & COFFEE ✦ THE DONUT STOP ✦ SWEETER MOMENTS ✦ DONUTS & COFFEE ✦',
   'جرّب نكهاتنا': 'Find your favorite flavor',

@@ -12,8 +12,8 @@ export default function Hero() {
 </div>
 <div className="hero-visual" aria-label={t("مجموعة من أصناف الدونات")}>
 <div className="hero-blob"></div>
-<img className="hero-donut hero-donut-main" src="/assets/donuts/10-dubai-donut.png?v=transparent-2" alt={t("دونات دبي بالفستق")} />
-<img className="hero-donut hero-donut-side" src="/assets/donuts/16-lotus-filling.png?v=transparent-2" alt={t("دونات بحشوة اللوتس")} />
+<img className="hero-donut hero-donut-main" src="/assets/donuts/36-strawberry-jam-cream.png?v=transparent-2" alt={t("دونات ستروبيري مع كريم")} />
+<img className="hero-donut hero-donut-side" src="/assets/donuts/18-oreo-filling.png?v=transparent-2" alt={t("دونات بحشوة الأوريو")} />
 <img className="hero-donut hero-donut-small" src="/assets/donuts/01-original-glaze.png?v=transparent-2" alt={t("دونات أوريجينال جليز")} />
 <span className="orbit-label orbit-top">{t("DONUT")}<br />{t("TIME!")}</span><span className="orbit-label orbit-bottom">{t("♡")}</span>
 </div>
