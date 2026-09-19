@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { offerCatalog, offerAvailability, offerTitle, offerDetails } from '../../lib/offerCatalog';
 import { useOffers } from '../../lib/useOffers';
+import OfferPoster from '../../components/Offers/OfferPoster';
 
 export default function AdminOffers({ role }) {
   const { rows, loading, error, refresh } = useOffers(null, true);
@@ -34,7 +35,7 @@ export default function AdminOffers({ role }) {
       const enabled = current?.enabled === true;
       const allowed = role === 'owner' || role === 'manager';
       return <article className="admin-offer" key={offer.code}>
-        <img src={`/assets/offers/${offer.image}.png`} alt={offerTitle(offer.code)} loading="lazy" />
+        <OfferPoster image={offer.image} alt={offerTitle(offer.code)} />
         <div><span className={enabled ? 'offer-enabled' : 'offer-disabled'}>{enabled ? 'مفعّل · ظاهر للزبائن' : 'معطّل · مخفي'}</span><h3>{offerTitle(offer.code)}</h3><p>{offerDetails(offer)}</p><p>{offerAvailability(offer)}</p>
           {offer.displayOnly && <p><strong>للعرض فقط — لا يغيّر حساب السلة.</strong></p>}
           <button type="button" role="switch" aria-checked={enabled} aria-label={`${enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer.code)}`} disabled={!!busy || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
