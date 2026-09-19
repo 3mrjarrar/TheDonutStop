@@ -1,16 +1,20 @@
 import './FeaturedProducts.css';
+import { useFeaturedProducts } from '../../lib/useFeaturedProducts';
+import { featuredItems } from '../../lib/featuredProducts';
+import { donutDescriptions } from '../menu/menuData';
 import { Link } from 'react-router';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export default function FeaturedProducts() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const photos = useFeaturedProducts();
   return (<section className="section favorites" id="favorites" aria-labelledby="favorites-title">
 <div className="section-heading"><div><span className="eyebrow">{t("جرّب نكهاتنا")}</span><h2 id="favorites-title">{t("اختيارات بتشهّي")} <span>{t("♡")}</span></h2></div><Link className="text-link" to="/menu">{t("كل الأصناف")} <span aria-hidden="true">{t("←")}</span></Link></div>
 <div className="featured-grid">
-<article className="feature-card"><div className="feature-image coral"><img src="/assets/donuts/10-dubai-donut.png?v=transparent-2" alt={t("دونات دبي")} /></div><div className="feature-info"><div><h3>{t("Dubai Donut")}</h3><p>{t("دونات دبي")}</p></div><strong>{t("10 ₪")}</strong></div></article>
-<article className="feature-card"><div className="feature-image lemon"><img src="/assets/donuts/13-pistachio-filling.png?v=transparent-2" alt={t("دونات بحشوة الفستق")} /></div><div className="feature-info"><div><h3>{t("Pistachio Filling")}</h3><p>{t("بحشوة الفستق")}</p></div><strong>{t("8 ₪")}</strong></div></article>
-<article className="feature-card"><div className="feature-image pink"><img src="/assets/donuts/16-lotus-filling.png?v=transparent-2" alt={t("دونات بحشوة اللوتس")} /></div><div className="feature-info"><div><h3>{t("Lotus Filling")}</h3><p>{t("بحشوة اللوتس")}</p></div><strong>{t("7 ₪")}</strong></div></article>
-<article className="feature-card"><div className="feature-image mint"><img src="/assets/donuts/01-original-glaze.png?v=transparent-2" alt={t("دونات أوريجينال جليز")} /></div><div className="feature-info"><div><h3>{t("Original Glaze")}</h3><p>{t("النكهة الأصلية")}</p></div><strong>{t("6 ₪")}</strong></div></article>
+{featuredItems(photos).map(([name, price, photo], index) => <article className="feature-card" key={photo}>
+  <div className={`feature-image ${['coral', 'lemon', 'pink', 'mint'][index]}`}><img src={`/assets/donuts/${photo}`} alt={name} loading="lazy" decoding="async" /></div>
+  <div className="feature-info"><div><h3>{name}</h3><p>{donutDescriptions[name][language]}</p></div><strong dir="ltr">{price} ₪</strong></div>
+</article>)}
 </div>
 </section>);
 }
