@@ -1,0 +1,2 @@
+.cart-hours-notice{display:flex;align-items:flex-start;gap:12px;margin:20px 0;padding:20px;border:1px solid #e4cfa4;border-radius:16px;background:#fff5de;color:#614b29}
+.cart-hours-notice>svg{flex-shrink:0;margin-top:2px}.cart-hours-notice p{margin:8px 0;line-height:1.7}.cart-hours-notice a{font-weight:700;text-decoration:underline;text-underline-offset:3px}.cart-hours-notice button{margin-inline-start:12px}

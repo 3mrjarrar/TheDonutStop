@@ -8,9 +8,16 @@ import { supabase } from '../../lib/supabase';
 import { isAvailable, tracksQuantity } from '../../lib/availability';
 import './cart.css';
 import { useOrderTracking } from '../orders/OrderTrackingContext';
+import { Link } from 'react-router';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import useOrderingHours from '../../lib/useOrderingHours';
+import './ordering-hours.css';
 
 export default function Cart({ branch, cart, setCart, rows, en, locked, setLocked, refresh }) {
   const { quote, quoteError, refreshQuote } = useCart();
+  const { status: hours, refresh: refreshHours } = useOrderingHours(branch.id);
+  const closedMessage = en ? 'This branch is closed right now. You can keep adding to your cart, but please come back during opening hours to confirm your order.' : 'هذا الفرع مغلق حاليًا. يمكنك متابعة إضافة المنتجات إلى السلة، لكن يرجى العودة خلال أوقات الدوام لتأكيد طلبك.';
+  const hoursError = en ? 'Unable to check opening hours. Please retry before confirming your order.' : 'تعذّر التحقق من أوقات الدوام. يرجى إعادة المحاولة قبل تأكيد الطلب.';
   const [checkout, setCheckout] = useState(false);
   const [delivery, setDelivery] = useState('pickup');
   const [error, setError] = useState('');
@@ -32,9 +39,20 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
   async function place(event) {
     event.preventDefault();
     if (sendingRef.current) return;
+    if (!pending.current && (!quote || quoteError)) return;
+    // Retrying an ambiguous request must still retrieve a previously accepted order,
+    // even after closing. The database rejects any NEW order outside opening hours.
+    const formData = new FormData(event.currentTarget);
+    sendingRef.current = true; setSending(true); setLocked(true); setError('');
     if (!pending.current) {
-      if (!quote || quoteError) return;
-      const data = new FormData(event.currentTarget);
+      const open = await refreshHours();
+      if (open !== true) {
+        setError(open === false ? closedMessage : hoursError);
+        sendingRef.current = false; setSending(false); setLocked(false); return;
+      }
+    }
+    if (!pending.current) {
+      const data = formData;
       pending.current = {
         p_request_id: crypto.randomUUID(), p_branch: branch.id,
         p_items: orderItems(cart),
@@ -54,7 +72,8 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       const known = problem.code && /^P\d{4}$|^22\w{3}$|^23\w{3}$|^42501$|^40001$/.test(problem.code);
       if (known) {
         pending.current = null; setLocked(false); refresh(); refreshQuote();
-        if (problem.message?.includes('PRICE_CHANGED')) setError(en ? 'Prices or offers changed. Review the updated total and confirm again.' : 'تغيّرت الأسعار أو العروض. راجع الإجمالي المحدّث ثم أكّد الطلب مجددًا.');
+        if (problem.message?.includes('BRANCH_CLOSED')) { setError(closedMessage); refreshHours(); }
+        else if (problem.message?.includes('PRICE_CHANGED')) setError(en ? 'Prices or offers changed. Review the updated total and confirm again.' : 'تغيّرت الأسعار أو العروض. راجع الإجمالي المحدّث ثم أكّد الطلب مجددًا.');
         else if (problem.message?.includes('ITEM_UNAVAILABLE')) setError(en ? 'An item is no longer available in the requested quantity. Update your cart.' : 'أحد الأصناف لم يعد متوفرًا بالكمية المطلوبة. عدّل السلة وحاول مجددًا.');
         else if (problem.message?.includes('TOO_MANY_ORDERS')) setError(en ? 'Too many recent orders. Please try later.' : 'وصلت للحد المسموح من الطلبات المتتالية. حاول لاحقًا.');
         else setError(en ? 'Order was not saved. Check your details and branch availability.' : 'لم يُحفظ الطلب. تحقق من بياناتك وتوفر الخدمة في الفرع.');
@@ -72,6 +91,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       {quoteError && <button className="tab" type="button" onClick={refreshQuote}>{en ? 'Retry' : 'إعادة المحاولة'}</button>}
       {delivery === 'delivery' && <p>{en ? 'Delivery fee included' : 'يشمل رسوم التوصيل'}: {quote?.delivery_fee ?? branch.delivery_fee} ₪</p>}
       {error && <p className="cart-error" role="alert">{error}</p>}
+      {(!hours || !hours.open) && <div className="cart-hours-notice" role="status" id="cart-hours-notice"><AccessTimeIcon aria-hidden="true" /><div><strong>{!hours ? (en ? 'Checking opening hours…' : 'جارٍ التحقق من أوقات الدوام…') : hours.failed ? (en ? 'Opening hours unavailable' : 'تعذّر التحقق من الدوام') : (en ? 'A little pause for something sweet' : 'وقفة صغيرة، ومنرجع نحلّي يومك')}</strong><p>{!hours ? (en ? 'Your cart is still available while we check.' : 'يمكنك متابعة تعديل سلتك أثناء التحقق.') : hours.failed ? hoursError : closedMessage}</p><Link to="/#hours">{en ? 'View branch hours' : 'عرض أوقات دوام الفروع'}</Link>{hours?.failed && <button type="button" className="tab" onClick={refreshHours}>{en ? 'Retry' : 'إعادة المحاولة'}</button>}</div></div>}
       {!checkout ? <button className="tab active" disabled={!quote || quoteError} onClick={() => setCheckout(true)}>{en ? 'Checkout' : 'إتمام الطلب'}</button> : <form onSubmit={place}>
         <fieldset disabled={locked}><legend>{en ? 'Guest order details' : 'بيانات الطلب — بدون حساب'}</legend>
           <label>{en ? 'Name' : 'الاسم'}<input name="name" autoComplete="name" minLength={2} maxLength={100} required /></label>
@@ -82,7 +102,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
           <label>{en ? 'Notes (optional)' : 'ملاحظات (اختياري)'}<textarea name="notes" maxLength={1000} /></label>
           <label>{en ? 'Payment method' : 'طريقة الدفع'}<select name="payment"><option>{en ? 'Cash on receipt' : 'نقدًا عند الاستلام'}</option></select></label>
         </fieldset>
-        <button className="tab active" disabled={sending || (!locked && (!quote || quoteError))}>{sending ? (en ? 'Sending…' : 'جارٍ الإرسال…') : locked ? (en ? 'Retry same order' : 'إعادة المحاولة لنفس الطلب') : (en ? 'Place order' : 'تأكيد الطلب')}</button>
+        <button className="tab active" aria-describedby={!hours || !hours.open ? 'cart-hours-notice' : undefined} disabled={sending || (!locked && (!quote || quoteError || !hours?.open))}>{sending ? (en ? 'Sending…' : 'جارٍ الإرسال…') : locked ? (en ? 'Retry same order' : 'إعادة المحاولة لنفس الطلب') : (en ? 'Place order' : 'تأكيد الطلب')}</button>
         {!locked && <button className="tab" type="button" onClick={() => setCheckout(false)}>{en ? 'Back to cart' : 'العودة للسلة'}</button>}
       </form>}
     </>}
