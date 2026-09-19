@@ -46,7 +46,7 @@ html[dir="ltr"] .feature-info h3,html[dir="ltr"] .menu-item h3{text-align:left}
 @media(max-width:360px){.menu-grid.hot-drink-grid{grid-template-columns:1fr}}
 .hot-drink-card .drink-description{font-size:14px;line-height:1.65;margin-top:6px}
 .hot-drink-card .feature-info>div{min-width:0}
-.menu-section h1{font-size:clamp(32px,4vw,52px);line-height:1.2;letter-spacing:-.035em;margin:12px 0 0}.menu-section h1 span{color:#e68199}.menu-section{min-height:65vh}#menu-list:focus-visible{outline:2px solid var(--teal);outline-offset:5px}
+.menu-section h1{font-size:clamp(32px,4vw,52px);line-height:1.2;letter-spacing:-.035em;margin:12px 0 0}.menu-section h1{display:flex;align-items:center;gap:.22em}.menu-title-donut{width:.88em;height:.88em;flex:none;transform:rotate(-14deg)}.menu-section{min-height:65vh}#menu-list:focus-visible{outline:2px solid var(--teal);outline-offset:5px}
 .branch-picker{display:grid;grid-template-columns:minmax(240px,.85fr) minmax(0,1.65fr);align-items:center;gap:32px;padding:30px;background:#fff;border:1px solid #e0e9e3;border-radius:24px;margin-bottom:32px;box-shadow:0 8px 28px #19474a06}
 .branch-picker-eyebrow{display:block;color:#9c3e5b;font-size:12px;font-weight:800;letter-spacing:.04em;margin-bottom:8px}
 .branch-picker h2{color:var(--dark);font-size:clamp(21px,2vw,28px);line-height:1.5;margin:0 0 6px}
