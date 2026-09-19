@@ -51,11 +51,11 @@ test('legacy default rows never create cards without explicit admin activation',
 });
 
 import { offerAvailability } from '../src/lib/offerCatalog.js';
-test('shared offer labels include every branch except Terah for drinks', () => {
+test('shared offer labels include every branch except Icon Mall for drinks', () => {
   for (const offer of offerCatalog) {
     assert.match(offerAvailability(offer), /جميع الفروع/);
-    assert.equal(offerAvailability(offer).includes('ما عدا الطيرة'), offer.code === 'morning');
-    assert.equal(offerAvailability(offer,true).includes('except Terah'), offer.code === 'morning');
+    assert.equal(offerAvailability(offer).includes('ما عدا Icon Mall'), offer.code === 'morning');
+    assert.equal(offerAvailability(offer,true).includes('except Icon Mall'), offer.code === 'morning');
   }
 });
 

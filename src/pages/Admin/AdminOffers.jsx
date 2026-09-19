@@ -16,7 +16,7 @@ export default function AdminOffers({ role }) {
       const enabled = current.enabled === true;
       const { error: problem } = await supabase.rpc('set_shared_offer', { p_code: offer.code, p_enabled: !enabled, p_expected_enabled: current.enabled });
       if (problem) throw problem;
-      setMessage(`${enabled ? 'تم تعطيل وإخفاء' : 'تم تفعيل وإظهار'} عرض ${offerTitle(offer.code)} في جميع الفروع${offer.includesDrinks ? ' ما عدا الطيرة' : ''}.`);
+      setMessage(`${enabled ? 'تم تعطيل وإخفاء' : 'تم تفعيل وإظهار'} عرض ${offerTitle(offer.code)} في جميع الفروع${offer.includesDrinks ? ' ما عدا Icon Mall' : ''}.`);
       window.dispatchEvent(new Event('donut-offers-changed'));
       refresh();
     } catch (problem) {
@@ -26,7 +26,7 @@ export default function AdminOffers({ role }) {
   }
   return <section className="admin-panel">
     <div className="admin-toolbar"><h2>العروض — جميع الفروع</h2><a href="/#offers" target="_blank" rel="noreferrer">معاينة في الموقع ↗</a></div>
-    <p>العروض مشتركة بين جميع الفروع. تفعيل أو إخفاء أي عرض يطبّق على الكل. عروض المشروبات لا تشمل الطيرة لأنها تقدّم الدونات فقط. يُطبّق أكبر خصم مستحق دون جمع العروض.</p>
+    <p>العروض مشتركة بين جميع الفروع. تفعيل أو إخفاء أي عرض يطبّق على الكل. عروض المشروبات لا تشمل Icon Mall. يُطبّق أكبر خصم مستحق دون جمع العروض.</p>
     <p>{role === 'owner' || role === 'manager' ? 'يمكنك التحكم بالعروض المشتركة من هنا، دون الحاجة لتغيير الفرع.' : 'يمكنك الاطلاع على حالة العروض. تعديلها متاح للمدير والمالك.'}</p>
     {message && <p className="admin-success" role="status">{message}</p>}{failure && <p className="admin-error" role="alert">{failure}</p>}
     {loading ? <p role="status">جارٍ تحميل العروض…</p> : error ? <div role="alert"><p>تعذّر تحميل إعدادات العروض. تحقق من الاتصال وتطبيق تحديث قاعدة البيانات.</p><button onClick={refresh}>إعادة المحاولة</button></div> : <div className="admin-offers-grid">{offerCatalog.map(offer => {

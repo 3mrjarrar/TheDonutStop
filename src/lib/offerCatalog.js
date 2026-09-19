@@ -35,6 +35,6 @@ function offerBaseDetails(offer, en = false) {
 }
 export function offerAvailability(offer, en = false) {
   return offer.includesDrinks
-    ? (en ? 'Available at all branches except Terah, which serves donuts only.' : 'متوفر في جميع الفروع ما عدا الطيرة، لأنها تقدّم الدونات فقط.')
+    ? (en ? 'Available at all branches except Icon Mall.' : 'متوفر في جميع الفروع ما عدا Icon Mall.')
     : (en ? 'Available at all branches.' : 'متوفر في جميع الفروع.');
 }
