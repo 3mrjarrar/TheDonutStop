@@ -12,9 +12,12 @@ export function isOfferEnabled(row) {
   const offer = findOffer(row?.code);
   return !!offer && row.enabled === true && (!offer.requiresActivation || row.admin_activated === true);
 }
-export function visibleOffers(rows) {
+export function visibleOffers(rows, branchCode = null) {
   // The catalog supplies presentation only; it must never create a visible offer.
-  const enabledCodes = new Set(rows.filter(isOfferEnabled).map(row => row.code));
+  const enabledCodes = new Set(rows.filter(row => isOfferEnabled(row)
+    && (!branchCode || row.branches?.code === branchCode)
+    && (row.code !== 'morning' || !branchCode || ['NAB', 'TERI'].includes(branchCode))
+  ).map(row => row.code));
   return [...enabledCodes].map(findOffer).filter(Boolean)
     .sort((a, b) => offerCatalog.indexOf(a) - offerCatalog.indexOf(b));
 }

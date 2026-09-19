@@ -26,6 +26,21 @@ test('all four new bundles prompt at paid quantity and stop at full bundles', ()
 });
 
 import { visibleOffers } from '../src/lib/offerCatalog.js';
+test('selected branch limits offers and never shows morning at Icon Mall', () => {
+  // Include an incorrectly enabled Icon row to guard against stale server data.
+  const rows = ['NAB', 'TERI', 'ICON'].flatMap(code => [
+    { code: 'morning', enabled: true, admin_activated: true, branches: { code } },
+    { code: 'buy6get2', enabled: true, branches: { code } },
+  ]);
+  assert.deepEqual(visibleOffers(rows, 'ICON').map(offer => offer.code), ['buy6get2']);
+  for (const code of ['NAB', 'TERI']) {
+    assert.deepEqual(visibleOffers(rows, code).map(offer => offer.code), ['buy6get2', 'morning']);
+    const disabled = rows.map(row => row.branches.code === code && row.code === 'morning' ? { ...row, enabled: false } : row);
+    assert.deepEqual(visibleOffers(disabled, code).map(offer => offer.code), ['buy6get2']);
+  }
+  assert.deepEqual(visibleOffers(rows).map(offer => offer.code), ['buy6get2', 'morning']);
+});
+
 test('hiding every offer across every branch leaves no original or new cards', () => {
   const rows = ['NAB','ICON','TERI'].flatMap(branch_id => offerCatalog.map(offer => ({branch_id, code:offer.code, enabled:false, admin_activated:true})));
   assert.deepEqual(visibleOffers(rows), []);

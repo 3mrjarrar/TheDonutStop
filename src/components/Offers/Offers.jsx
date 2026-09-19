@@ -1,4 +1,6 @@
 import './Offers.css';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import OfferPoster from './OfferPoster';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useOffers } from '../../lib/useOffers';
@@ -7,8 +9,14 @@ import { visibleOffers, offerAvailability, offerTitle, offerDetails } from '../.
 export default function Offers() {
   const { t, language } = useLanguage();
   const en = language === 'en';
+  const [params] = useSearchParams();
+  const [savedBranch, setSavedBranch] = useState(null);
+  useEffect(() => {
+    try { setSavedBranch(localStorage.getItem('donut-stop-branch')); } catch {}
+  }, []);
+  const branchCode = params.get('branch') || savedBranch;
   const { rows, loading, error, refresh } = useOffers();
-  const visible = visibleOffers(rows);
+  const visible = visibleOffers(rows, branchCode);
   return <section className="offers" id="offers" aria-labelledby="offers-title"><div className="offers-showcase">
     <header className="offers-heading"><span className="eyebrow">{t('شارك الحلو مع الكل')}</span><h2 id="offers-title">{t('عروض بتحلّي يومك')}</h2></header>
     {loading ? <p role="status">{en ? 'Loading current offers…' : 'جارٍ تحميل العروض الحالية…'}</p> : error ? <div role="status"><p>{en ? 'Current offers could not be loaded.' : 'تعذّر تحميل العروض الحالية.'}</p><button className="tab" onClick={refresh}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : !visible.length ? <p className="offers-empty" role="status">{en ? 'No offers for now. Check back later!' : 'ما في عروض حاليًا، ارجع شوفنا قريبًا!'}</p> : <>
