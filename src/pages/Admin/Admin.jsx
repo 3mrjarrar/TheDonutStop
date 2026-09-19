@@ -13,11 +13,15 @@ import AdminFeatured from './AdminFeatured';
 import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import { drinkTypes, inventoryGroup, inventoryPrice, byInventoryPrice, inventoryProductImage } from './inventory';
 import { isAvailable, tracksQuantity } from '../../lib/availability';
+import StaffLogin from './StaffLogin';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const actions = { restock: 'إضافة مخزون', waste: 'تسجيل تالف', count: 'تصحيح الجرد', unavailable: 'إيقاف البيع', available: 'إعادة إتاحة البيع' };
 const unwrap = ({ data, error }) => { if (error) throw error; return data; };
 
 export default function Admin() {
+  const { language } = useLanguage();
+  const authCopy = (ar, en) => language === 'en' ? en : ar;
   const [session, setSession] = useState(null);
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -50,6 +54,8 @@ export default function Admin() {
     let live = true;
     supabase.auth.getSession().then(({ data, error: problem }) => {
       if (live) { if (problem) setError('تعذّر قراءة جلسة الدخول.'); setSession(data.session); setReady(true); }
+    }).catch(() => {
+      if (live) { setError('تعذّر قراءة جلسة الدخول. / Unable to check your session.'); setReady(true); }
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, current) => {
       if (!live) return;
@@ -95,25 +101,35 @@ export default function Admin() {
   async function login(event) {
     event.preventDefault(); setBusy(true); setError(''); setMessage('');
     const form = new FormData(event.currentTarget);
-    const { error: problem } = await supabase.auth.signInWithPassword({ email: form.get('email').trim(), password: form.get('password') });
-    if (problem) setError('تعذّر تسجيل الدخول. تحقق من الإيميل وكلمة المرور.');
-    setBusy(false);
+    try {
+      const { error: problem } = await supabase.auth.signInWithPassword({ email: form.get('email').trim(), password: form.get('password') });
+      if (problem) throw problem;
+    } catch {
+      setError(authCopy('تعذّر تسجيل الدخول. تحقق من الإيميل وكلمة المرور وحاول مجددًا.', 'Unable to sign in. Check your email and password and try again.'));
+    } finally { setBusy(false); }
   }
   async function reset(event) {
     const email = event.currentTarget.form.elements.email.value.trim();
-    if (!email) { setError('أدخل إيميلك أولًا.'); return; }
-    setBusy(true); setError('');
-    const { error: problem } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/admin` });
-    if (problem) setError('تعذّر إرسال رابط الاستعادة. حاول لاحقًا.');
-    else setMessage('إذا كان الإيميل مسجلًا، سيصلك رابط لاستعادة كلمة المرور.');
-    setBusy(false);
+    if (!event.currentTarget.form.elements.email.reportValidity()) return;
+    setBusy(true); setError(''); setMessage('');
+    try {
+      const { error: problem } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/admin` });
+      if (problem) throw problem;
+      setMessage(authCopy('إذا كان الإيميل مسجلًا، سيصلك رابط لاستعادة كلمة المرور.', 'If this email is registered, you’ll receive a password reset link.'));
+    } catch {
+      setError(authCopy('تعذّر إرسال رابط الاستعادة. حاول لاحقًا.', 'Unable to send a reset link. Please try again later.'));
+    } finally { setBusy(false); }
   }
   async function changePassword(event) {
     event.preventDefault(); setBusy(true); setError('');
-    const { error: problem } = await supabase.auth.updateUser({ password: new FormData(event.currentTarget).get('password') });
-    if (problem) setError('تعذّر تحديث كلمة المرور. جرّب كلمة أقوى أو اطلب رابطًا جديدًا.');
-    else { setRecovery(false); setMessage('تم حفظ كلمة المرور.'); }
-    setBusy(false);
+    const password = new FormData(event.currentTarget).get('password');
+    try {
+      const { error: problem } = await supabase.auth.updateUser({ password });
+      if (problem) throw problem;
+      setRecovery(false); setMessage(authCopy('تم حفظ كلمة المرور.', 'Your password has been saved.'));
+    } catch {
+      setError(authCopy('تعذّر تحديث كلمة المرور. جرّب كلمة أقوى أو اطلب رابطًا جديدًا.', 'Unable to update your password. Try a stronger password or request a new link.'));
+    } finally { setBusy(false); }
   }
   async function save(event) {
     event.preventDefault();
@@ -140,10 +156,13 @@ export default function Admin() {
   }
   async function logout() {
     setBusy(true);
-    const { error: problem } = await supabase.auth.signOut();
-    if (problem) setError('تعذّر تسجيل الخروج. حاول مجددًا.');
-    else { setRecovery(false); setMessage(''); setError(''); }
-    setBusy(false);
+    try {
+      const { error: problem } = await supabase.auth.signOut();
+      if (problem) throw problem;
+      setRecovery(false); setMessage(''); setError('');
+    } catch {
+      setError(authCopy('تعذّر تسجيل الخروج. حاول مجددًا.', 'Unable to sign out. Please try again.'));
+    } finally { setBusy(false); }
   }
   function handleOrders(data, incoming) {
     setNewCount(data.filter(order => order.status === 'new').length);
@@ -153,18 +172,14 @@ export default function Admin() {
   const visibleEvents = events.filter(item => visibleRows.some(row => row.variant_id === item.variant_id));
   const sectionTitle = { orders: 'الطلبات', inventory: 'المخزون', offers: 'العروض', featured: 'الصفحة الرئيسية' }[section];
   function openInventory(row, action = 'restock') { setEdit({ row, action, requestId: crypto.randomUUID() }); }
+  if (!ready || !session || recovery) return <StaffLogin ready={ready} recovery={recovery} busy={busy} error={!supabase ? authCopy('إعداد اتصال قاعدة البيانات غير مكتمل.', 'Staff sign-in is not configured yet.') : error} message={message} configured={!!supabase} onLogin={login} onReset={reset} onChangePassword={changePassword} />;
   return <main className={`admin-shell${session && profile && !recovery ? ' admin-dashboard' : ''}`} dir="rtl">
     <title>لوحة الإدارة | The Donut Stop</title><meta name="robots" content="noindex,nofollow" />
     {session && profile && !recovery && <aside className="admin-sidebar"><Link className="admin-brand" to="/"><img src="/assets/logo.jpg" alt="" /><span>The Donut Stop<small>لوحة الإدارة</small></span></Link><nav aria-label="أقسام لوحة الإدارة">{[['orders','الطلبات',ReceiptLongIcon],['inventory','المخزون',Inventory2OutlinedIcon],['offers','العروض',LocalOfferOutlinedIcon],['featured','الصفحة الرئيسية',StorefrontOutlinedIcon]].map(([key,label,Icon]) => <button type="button" key={key} disabled={busy || (key === 'inventory' && profile.role === 'order_staff')} className={section === key ? 'is-active' : ''} aria-current={section === key ? 'page' : undefined} onClick={() => { setSection(key); setEdit(null); }}><Icon /><span>{label}</span>{key === 'orders' && newCount > 0 && <b className="admin-count">{newCount}</b>}</button>)}</nav><div className="admin-sidebar-footer"><span>{profile.name}</span><small>{selected?.name_ar}</small><Link to="/">العودة للموقع ↗</Link></div></aside>}
     <div className="admin-workspace">
-    <header className="admin-header"><div><Link to="/">The Donut Stop</Link><h1>{session && profile ? sectionTitle : 'لوحة الإدارة'}</h1></div>{session && <button disabled={busy} onClick={logout}>تسجيل الخروج</button>}</header>
+    <header className="admin-header"><div><Link to="/">The Donut Stop</Link><h1>{session && profile ? sectionTitle : 'لوحة الإدارة'}</h1></div><div className="admin-mode-actions"><Link className="admin-store-link" to="/"><StorefrontOutlinedIcon />{authCopy('عرض المتجر', 'View store')}</Link>{session && <button disabled={busy} onClick={logout}>{authCopy('تسجيل الخروج', 'Sign out')}</button>}</div></header>
     {error && <p className="admin-error" role="alert">{error}</p>}{message && <p className="admin-success" role="status">{message}</p>}
-    {!ready ? <p role="status">جارٍ التحميل…</p> : recovery ? <form className="admin-panel admin-login" onSubmit={changePassword}><h2>تعيين كلمة مرور جديدة</h2><label>كلمة المرور الجديدة<input name="password" type="password" autoComplete="new-password" required minLength={12} /></label><button disabled={busy}>حفظ كلمة المرور</button></form> : !session ? <form className="admin-panel admin-login" onSubmit={login}>
-      <h2>تسجيل دخول الموظفين</h2><p>استخدم حسابك الشخصي المخصص لإدارة المحل.</p>
-      <label>الإيميل<input name="email" type="email" autoComplete="username" dir="ltr" required /></label>
-      <label>كلمة المرور<input name="password" type="password" autoComplete="current-password" dir="ltr" required /></label>
-      <button disabled={busy || !supabase}>{busy ? 'جارٍ التنفيذ…' : 'تسجيل الدخول'}</button><button type="button" className="secondary" disabled={busy || !supabase} onClick={reset}>نسيت كلمة المرور</button>
-    </form> : <>
+    <>
       {profile && <section className="admin-branch-bar"><div><strong>مرحبًا، {profile.name}</strong><p>إدارة يومك، من الطلب إلى التسليم.</p></div>{!['offers', 'featured'].includes(section) && <label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setEdit(null); setRows([]); setSearch(''); setMessage(''); setNotice(null); setNewCount(0); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label>}{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
       {notice && <div className="admin-notification" role="alert"><NotificationsActiveOutlinedIcon /><div><strong>وصل طلب جديد!</strong><p>{notice.count > 1 ? `${notice.count} طلبات جديدة` : notice.number}</p></div><button onClick={() => { setSection('orders'); setNotice(null); }}>عرض الطلبات</button><button className="secondary" aria-label="إغلاق الإشعار" onClick={() => setNotice(null)}>إغلاق</button></div>}
       {profile && branch && <div hidden={section !== 'orders'}><Orders key={branch} branch={branch} onOrders={handleOrders} onChange={() => setRevision(value => value + 1)} /></div>}
@@ -185,7 +200,7 @@ export default function Admin() {
         <section className="admin-panel"><h2>آخر 30 تعديلًا</h2>{visibleEvents.length ? <ul className="admin-history">{visibleEvents.map(item => <li key={item.id}><strong>{rows.find(row => row.variant_id === item.variant_id)?.product_variants.products.name || 'صنف'}</strong> — {actions[item.action] || item.action}: {!['available', 'unavailable'].includes(item.action) && <b dir="ltr">{item.delta > 0 ? '+' : ''}{item.delta}</b>} — {item.reason}<small>{new Date(item.created_at).toLocaleString('ar')} · بواسطة {item.actor_id === session.user.id ? profile.name : item.actor_id}</small></li>)}</ul> : <p>لم تُسجّل تعديلات بعد.</p>}</section>
       </>}
       </>}
-    </>}
+    </>
     </div>
   </main>;
 }
