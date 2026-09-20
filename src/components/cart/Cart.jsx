@@ -11,11 +11,19 @@ import { useOrderTracking } from '../orders/OrderTrackingContext';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutlined';
 import useOrderHold from '../../lib/useOrderHold';
 import './order-hold-notice.css';
+import { Link } from 'react-router';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import useOrderingHours from '../../lib/useOrderingHours';
+import './ordering-hours.css';
 
 export default function Cart({ branch, cart, setCart, rows, en, locked, setLocked, refresh }) {
   const { quote, quoteError, refreshQuote } = useCart();
   const { data: hold, error: holdError, refresh: refreshHold } = useOrderHold(branch.id);
   const pauseMessage = en ? 'This branch has temporarily paused new orders. You can keep adding to your cart. Please come back when orders resume.' : 'أوقف هذا الفرع استقبال الطلبات مؤقتًا. يمكنك متابعة إضافة المنتجات إلى السلة. يرجى العودة لتأكيد طلبك عند استئناف استقبال الطلبات.';
+
+  const { status: hours, refresh: refreshHours } = useOrderingHours(branch.id);
+  const closedMessage = en ? 'This branch is closed right now. You can keep adding to your cart, but please come back during opening hours to confirm your order.' : 'هذا الفرع مغلق حاليًا. يمكنك متابعة إضافة المنتجات إلى السلة، لكن يرجى العودة خلال أوقات الدوام لتأكيد طلبك.';
+  const hoursError = en ? 'Unable to check opening hours. Please retry before confirming your order.' : 'تعذّر التحقق من أوقات الدوام. يرجى إعادة المحاولة قبل تأكيد الطلب.';
   const [checkout, setCheckout] = useState(false);
   const [delivery, setDelivery] = useState('pickup');
   const [error, setError] = useState('');
@@ -37,10 +45,23 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
   async function place(event) {
     event.preventDefault();
     if (sendingRef.current) return;
+    if (!pending.current && (!quote || quoteError)) return;
+    // Retrying an ambiguous request must still retrieve a previously accepted order,
+    // even after closing. The database rejects any NEW order outside opening hours.
+    const formData = new FormData(event.currentTarget);
+    sendingRef.current = true; setSending(true); setLocked(true); setError('');
+    try {
     if (!pending.current) {
-      if (!hold || hold.paused) { setError(hold?.paused ? `${pauseMessage} ${hold.reason}` : (en ? 'Please wait until branch availability is verified.' : 'يرجى الانتظار حتى يتم التحقق من استقبال الطلبات في الفرع.')); return; }
-      if (!quote || quoteError) return;
-      const data = new FormData(event.currentTarget);
+      const [open, latestHold] = await Promise.all([refreshHours(), refreshHold()]);
+      if (!latestHold || latestHold.paused) {
+        setError(latestHold?.paused ? `${pauseMessage} ${latestHold.reason}` : (en ? 'Unable to verify branch availability. Please retry.' : 'تعذّر التحقق من استقبال الطلبات. يرجى إعادة المحاولة.'));
+        return;
+      }
+      if (open !== true) {
+        setError(open === false ? closedMessage : hoursError);
+        return;
+      }
+      const data = formData;
       pending.current = {
         p_request_id: crypto.randomUUID(), p_branch: branch.id,
         p_items: orderItems(cart),
@@ -48,8 +69,6 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
         p_expected_total: Number(total.toFixed(2)),
       };
     }
-    sendingRef.current = true; setSending(true); setLocked(true); setError('');
-    try {
       const { data, error: problem } = await supabase.rpc('place_guest_order', pending.current);
       if (problem) throw problem;
       trackOrder({ ...data, requestId: pending.current.p_request_id, status: 'new', fulfillment: pending.current.p_customer.fulfillment, branch_name_ar: branch.name_ar, branch_name_en: branch.name_en });
@@ -61,6 +80,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       if (known) {
         pending.current = null; setLocked(false); refresh(); refreshQuote();
         if (problem.message?.includes('ORDERS_PAUSED')) { setError(`${pauseMessage} ${problem.details || ''}`); refreshHold(); }
+        else if (problem.message?.includes('BRANCH_CLOSED')) { setError(closedMessage); refreshHours(); }
         else if (problem.message?.includes('PRICE_CHANGED')) setError(en ? 'Prices or offers changed. Review the updated total and confirm again.' : 'تغيّرت الأسعار أو العروض. راجع الإجمالي المحدّث ثم أكّد الطلب مجددًا.');
         else if (problem.message?.includes('ITEM_UNAVAILABLE')) setError(en ? 'An item is no longer available in the requested quantity. Update your cart.' : 'أحد الأصناف لم يعد متوفرًا بالكمية المطلوبة. عدّل السلة وحاول مجددًا.');
         else if (problem.message?.includes('TOO_MANY_ORDERS')) setError(en ? 'Too many recent orders. Please try later.' : 'وصلت للحد المسموح من الطلبات المتتالية. حاول لاحقًا.');
@@ -68,7 +88,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       } else {
         setError(en ? 'Confirmation could not be retrieved. Keep this page open and retry the same order to avoid duplicates.' : 'تعذّر استلام التأكيد. أبقِ الصفحة مفتوحة واضغط إعادة المحاولة لنفس الطلب، لتجنب تكراره.');
       }
-    } finally { sendingRef.current = false; setSending(false); }
+    } finally { sendingRef.current = false; setSending(false); if (!pending.current) setLocked(false); }
   }
   return <section className="cart-panel" aria-labelledby="cart-title"><h2 id="cart-title">{en ? 'Your cart' : 'سلة الطلب'}</h2><p>{en ? 'Your order is from ' : 'طلبك من فرع '}<strong>{en ? branch.name_en : branch.name_ar}</strong></p>
     {!cart.length ? <p>{en ? 'Your cart is empty.' : 'السلة فارغة.'}</p> : <>
@@ -80,6 +100,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       {delivery === 'delivery' && <p>{en ? 'Delivery fee included' : 'يشمل رسوم التوصيل'}: {quote?.delivery_fee ?? branch.delivery_fee} ₪</p>}
       {error && <p className="cart-error" role="alert">{error}</p>}
       {(!hold || hold.paused) && <div className="order-hold-notice" id="order-hold-notice" role="status"><PauseCircleOutlineIcon aria-hidden="true" /><div><strong>{hold?.paused ? (en ? 'Orders temporarily paused' : 'استقبال الطلبات متوقف مؤقتًا') : holdError ? (en ? 'Unable to check branch availability' : 'تعذّر التحقق من استقبال الطلبات') : (en ? 'Checking branch availability…' : 'جارٍ التحقق من استقبال الطلبات…')}</strong>{hold?.paused && <><p>{pauseMessage}</p><p className="order-hold-public-reason"><strong>{en ? 'Reason: ' : 'السبب: '}</strong>{hold.reason}</p></>}{holdError && <><p>{en ? 'You can keep shopping. Please retry before confirming your order.' : 'يمكنك متابعة التسوق. يرجى إعادة المحاولة قبل تأكيد طلبك.'}</p><button type="button" className="tab" onClick={refreshHold}>{en ? 'Retry' : 'إعادة المحاولة'}</button></>}</div></div>}
+      {(!hours || !hours.open) && <div className="cart-hours-notice" role="status" id="cart-hours-notice"><AccessTimeIcon aria-hidden="true" /><div><strong>{!hours ? (en ? 'Checking opening hours…' : 'جارٍ التحقق من أوقات الدوام…') : hours.failed ? (en ? 'Opening hours unavailable' : 'تعذّر التحقق من الدوام') : (en ? 'A little pause for something sweet' : 'وقفة صغيرة، ومنرجع نحلّي يومك')}</strong><p>{!hours ? (en ? 'Your cart is still available while we check.' : 'يمكنك متابعة تعديل سلتك أثناء التحقق.') : hours.failed ? hoursError : closedMessage}</p><Link to="/#hours">{en ? 'View branch hours' : 'عرض أوقات دوام الفروع'}</Link>{hours?.failed && <button type="button" className="tab" onClick={refreshHours}>{en ? 'Retry' : 'إعادة المحاولة'}</button>}</div></div>}
       {!checkout ? <button className="tab active" disabled={!quote || quoteError} onClick={() => setCheckout(true)}>{en ? 'Checkout' : 'إتمام الطلب'}</button> : <form onSubmit={place}>
         <fieldset disabled={locked}><legend>{en ? 'Guest order details' : 'بيانات الطلب — بدون حساب'}</legend>
           <label>{en ? 'Name' : 'الاسم'}<input name="name" autoComplete="name" minLength={2} maxLength={100} required /></label>
@@ -90,7 +111,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
           <label>{en ? 'Notes (optional)' : 'ملاحظات (اختياري)'}<textarea name="notes" maxLength={1000} /></label>
           <label>{en ? 'Payment method' : 'طريقة الدفع'}<select name="payment"><option>{en ? 'Cash on receipt' : 'نقدًا عند الاستلام'}</option></select></label>
         </fieldset>
-        <button className="tab active" aria-describedby={!hold || hold.paused ? 'order-hold-notice' : undefined} disabled={sending || (!locked && (!quote || quoteError || !hold || hold.paused))}>{sending ? (en ? 'Sending…' : 'جارٍ الإرسال…') : locked ? (en ? 'Retry same order' : 'إعادة المحاولة لنفس الطلب') : (en ? 'Place order' : 'تأكيد الطلب')}</button>
+        <button className="tab active" aria-describedby={[(!hold || hold.paused) && 'order-hold-notice', !hours?.open && 'cart-hours-notice'].filter(Boolean).join(' ') || undefined} disabled={sending || (!locked && (!quote || quoteError || !hold || hold.paused || !hours?.open))}>{sending ? (en ? 'Sending…' : 'جارٍ الإرسال…') : locked ? (en ? 'Retry same order' : 'إعادة المحاولة لنفس الطلب') : (en ? 'Place order' : 'تأكيد الطلب')}</button>
         {!locked && <button className="tab" type="button" onClick={() => setCheckout(false)}>{en ? 'Back to cart' : 'العودة للسلة'}</button>}
       </form>}
     </>}

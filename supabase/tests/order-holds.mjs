@@ -25,7 +25,7 @@ try {
   await db.exec("update branches set orders_paused=false, orders_pause_reason='' where code='ICON'");
   // This suite isolates manual holds even if the independent hours feature is later merged.
   if ((await db.query("select to_regclass('public.branch_ordering_hours') as hours")).rows[0].hours) {
-    await db.exec("update branch_ordering_hours set opens=0, closes=1440");
+    await db.exec("insert into branch_ordering_hours select code, day, 0, 1440 from branches cross join generate_series(0,6) day on conflict (branch_code,day_of_week) do update set opens=0, closes=1440");
   }
   const owner = '00000000-0000-0000-0000-000000000001';
   const manager = '00000000-0000-0000-0000-000000000002';
