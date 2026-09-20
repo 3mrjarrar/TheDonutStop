@@ -1,9 +1,10 @@
 import { offerTitle } from '../../lib/offerCatalog';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import OrderHoldControl from './OrderHoldControl';
 const labels = { new: 'جديد', preparing: 'قيد التحضير', ready: 'جاهز', completed: 'مكتمل', cancelled: 'ملغي' };
 const next = { new: ['preparing','cancelled'], preparing: ['ready','cancelled'], ready: ['completed','cancelled'] };
-export default function Orders({ branch, onChange, onOrders }) {
+export default function Orders({ branch, branches, role, onChange, onOrders }) {
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -44,6 +45,7 @@ export default function Orders({ branch, onChange, onOrders }) {
     lock.current = false; setBusy(false);
   }
   return <section className="admin-panel"><div className="admin-toolbar"><h2>الطلبات ({orders.filter(order => order.status === 'new').length} جديدة)</h2><button disabled={busy} onClick={() => setRevision(value => value + 1)}>تحديث الطلبات</button></div><p>آخر 100 طلب — تحديث تلقائي كل 10 ثوانٍ.</p>
+    <OrderHoldControl branch={branch} branches={branches} role={role} />
     {error && <p role="alert" className="admin-error">{error}</p>}
     {loading ? <p role="status">جارٍ تحميل الطلبات…</p> : !orders.length && !error ? <p>لا توجد طلبات بعد.</p> : orders.map(order => <article className="admin-order" key={order.id}><h3>{order.order_number} — {labels[order.status]}</h3><p>{order.customer_name} — <a href={`tel:${order.phone}`} dir="ltr">{order.phone}</a></p><p>{order.fulfillment === 'delivery' ? `توصيل: ${order.address}` : 'استلام من الفرع'}</p><ul>{[...order.order_items].sort((a,b) => Number(a.unit_price) - Number(b.unit_price) || a.name.localeCompare(b.name)).map((item,index) => <li key={index}>{item.quantity} × {item.name} {item.size !== 'standard' && `(${item.size})`} — {item.unit_price} ₪{item.free_quantity > 0 && <strong> — {item.free_quantity} مجانًا</strong>}</li>)}</ul>{order.notes && <p>ملاحظات: {order.notes}</p>}{Number(order.discount) > 0 && <p className="admin-success">{offerTitle(order.offer_code)} — الخصم: {order.discount} ₪</p>}<p>الإجمالي: {order.total} ₪ — نقدًا عند الاستلام {order.fulfillment === 'delivery' && `(التوصيل: ${order.delivery_fee} ₪)`}</p><p>{new Date(order.created_at).toLocaleString('ar')}</p><div className="admin-order-actions">{(next[order.status] || []).map(status => <button disabled={busy} key={status} onClick={() => update(order,status)}>{status === 'preparing' ? 'قبول وبدء التحضير' : status === 'ready' ? (order.fulfillment === 'delivery' ? 'تم التجهيز — جاهز للتوصيل' : 'تم التجهيز — جاهز للاستلام') : status === 'completed' ? 'إكمال الطلب' : 'رفض / إلغاء'}</button>)}</div></article>)}
   </section>;
