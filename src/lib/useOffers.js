@@ -27,8 +27,8 @@ export function useOffers(branchId = null, shared = false) {
         try {
           if (!supabase) throw new Error('Not configured');
           // Read optional activation metadata without breaking older database schemas.
-          let request = shared ? supabase.from('shared_offers').select('code,enabled')
-            : supabase.from('branch_offers').select('*,branches!inner(code,name_ar,name_en,active)').eq('branches.active', true);
+          let request = shared ? supabase.from('shared_offers').select('*')
+            : supabase.from('branch_offers').select('*,shared_offers!inner(*),branches!inner(code,name_ar,name_en,active)').eq('branches.active', true);
           if (!shared && branchId) request = request.eq('branch_id', branchId);
           const { data, error } = await request;
           if (error) throw error;

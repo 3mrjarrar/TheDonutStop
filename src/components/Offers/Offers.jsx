@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router';
 import OfferPoster from './OfferPoster';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useOffers } from '../../lib/useOffers';
-import { visibleOffers, offerAvailability, offerTitle, offerDetails } from '../../lib/offerCatalog';
+import { visibleOffers, offerAvailability, offerTitle, offerDetails, offerSchedule } from '../../lib/offerCatalog';
 
 export default function Offers() {
   const { t, language } = useLanguage();
@@ -21,9 +21,9 @@ export default function Offers() {
     <header className="offers-heading"><span className="eyebrow">{t('شارك الحلو مع الكل')}</span><h2 id="offers-title">{t('عروض بتحلّي يومك')}</h2></header>
     {loading ? <p role="status">{en ? 'Loading current offers…' : 'جارٍ تحميل العروض الحالية…'}</p> : error ? <div role="status"><p>{en ? 'Current offers could not be loaded.' : 'تعذّر تحميل العروض الحالية.'}</p><button className="tab" onClick={refresh}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : !visible.length ? <p className="offers-empty" role="status">{en ? 'No offers for now. Check back later!' : 'ما في عروض حاليًا، ارجع شوفنا قريبًا!'}</p> : <>
       <p className="offers-policy">{en ? 'Donut offers are shared across all branches. Drink offers exclude Icon Mall. The best eligible discount applies automatically; offers cannot be combined.' : 'عروض الدونات مشتركة بين جميع الفروع. عروض المشروبات لا تشمل Icon Mall. يُطبّق أكبر خصم مستحق تلقائيًا دون جمع العروض.'}</p>
-      {visible.map(offer => <article className="offer-row" key={offer.code} aria-labelledby={`${offer.code}-offer-title`}>
-        <OfferPoster className="offer-poster" image={offer.image} alt={offerTitle(offer.code, en)} />
-        <div className="offer-copy"><span className="eyebrow">{offer.displayOnly ? (en ? 'Morning offer' : 'عرض الصباح') : offer.tuesdayOnly ? (en ? 'Tuesdays' : 'كل ثلاثاء') : (en ? 'Active offer' : 'عرض مفعّل')}</span><h3 id={`${offer.code}-offer-title`}>{offerTitle(offer.code, en)}</h3><p>{offerDetails(offer, en)}</p><p className="offer-branches">{offerAvailability(offer, en)}</p></div>
+      {visible.map(offer => <article className={`offer-row${!offer.image && !offer.imageUrl ? " offer-row-text" : ""}`} key={offer.code} aria-labelledby={`${offer.code}-offer-title`}>
+        <OfferPoster className="offer-poster" image={offer.image} imageUrl={offer.imageUrl} alt={offerTitle(offer, en)} />
+        <div className="offer-copy"><span className="eyebrow">{offer.displayOnly ? (en ? 'Morning offer' : 'عرض الصباح') : (en ? 'Donut offer' : 'عرض الدونات')}</span><h3 id={`${offer.code}-offer-title`}>{offerTitle(offer, en)}</h3><p>{offerDetails(offer, en)}</p><p className="offer-schedule">{offerSchedule(offer, en)}</p><p className="offer-branches">{offerAvailability(offer, en)}</p></div>
       </article>)}
     </>}
   </div></section>;

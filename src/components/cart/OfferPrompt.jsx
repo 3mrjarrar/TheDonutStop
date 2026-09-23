@@ -8,7 +8,7 @@ import { offerPrompt } from '../../lib/offers';
 import { findOffer, offerTitle } from '../../lib/offerCatalog';
 import './cart.css';
 
-function OfferDialog({ offer, branch, cart, setCart, en, onClose }) {
+function OfferDialog({ definition, offer, branch, cart, setCart, en, onClose }) {
   const dialog = useRef(null);
   const submittingRef = useRef(false);
   const [rows, setRows] = useState([]);
@@ -66,8 +66,8 @@ function OfferDialog({ offer, branch, cart, setCart, en, onClose }) {
   }
   return <dialog ref={dialog} className="quantity-dialog offer-dialog" aria-labelledby="offer-dialog-title" onCancel={event => { if (submitting) event.preventDefault(); else onClose(); }} onClick={event => { if (!submitting && event.target === dialog.current) onClose(); }}>
     <button className="dialog-close" type="button" aria-label={en ? 'Close' : 'إغلاق'} disabled={submitting} onClick={onClose}><CloseIcon /></button>
-    <h2 id="offer-dialog-title">{offerTitle(offer.type, en)}</h2>
-    <p>{en ? `Choose ${offer.remaining} more donuts to complete this offer, then add your selection to cart. The best eligible discount is calculated automatically.` : `اختر ${offer.remaining} حبات لإكمال مجموعة العرض، ثم أضف اختياراتك إلى السلة. يُحسب أكبر خصم مستحق تلقائيًا.`}{findOffer(offer.type)?.eligiblePrices && (en ? ' Choose the free donut from the ₪6 and ₪7 varieties.' : 'اختر الحبة المجانية من أصناف 6 أو 7 شيكل.')}</p>
+    <h2 id="offer-dialog-title">{offerTitle(definition, en)}</h2>
+    <p>{en ? `Choose ${offer.remaining} more donuts to complete this offer, then add your selection to cart. The best eligible discount is calculated automatically.` : `اختر ${offer.remaining} حبات لإكمال مجموعة العرض، ثم أضف اختياراتك إلى السلة. يُحسب أكبر خصم مستحق تلقائيًا.`}{definition?.eligiblePrices && (en ? ' Choose the free donut from the ₪6 and ₪7 varieties.' : 'اختر الحبة المجانية من أصناف 6 أو 7 شيكل.')}</p>
     {loading ? <p role="status">{en ? 'Loading available donuts…' : 'جارٍ تحميل الدونات المتوفرة…'}</p> : failed ? <div role="alert"><p>{en ? 'Unable to load donuts.' : 'تعذّر تحميل الأصناف.'}</p><button className="tab" onClick={() => setRevision(value=>value+1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : <div className="offer-options">{options.map(row => {
       const id = row.product_variants.id;
       const name = row.product_variants.products.name;
@@ -94,8 +94,8 @@ export default function OfferPrompt() {
   const { cart, setCart, branch, quote, locked } = useCart();
   const { language } = useLanguage();
   const [dismissed, setDismissed] = useState('');
-  const offer = quote && offerPrompt(cart, quote.is_tuesday, quote.enabled_offers || []);
+  const offer = quote && offerPrompt(cart, quote.is_tuesday, quote.enabled_offers || [], quote.offer_rules);
   const key = offer ? `${branch?.id}:${offer.type}:${offer.count}` : '';
   if (!offer || !branch || locked || key === dismissed) return null;
-  return <OfferDialog key={key} offer={offer} branch={branch} cart={cart} setCart={setCart} en={language === 'en'} onClose={() => setDismissed(key)} />;
+  return <OfferDialog definition={quote.offer_rules?.find(rule => rule.code === offer.type) || findOffer(offer.type)} key={key} offer={offer} branch={branch} cart={cart} setCart={setCart} en={language === 'en'} onClose={() => setDismissed(key)} />;
 }

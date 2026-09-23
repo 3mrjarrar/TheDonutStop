@@ -1,3 +1,4 @@
+import { setupStorage } from './storage-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
@@ -7,7 +8,8 @@ try {
     create table auth.users(id uuid primary key);
     create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
     grant usage on schema auth to anon, authenticated;`);
-  const directory = new URL('../migrations/', import.meta.url);
+  await setupStorage(db);
+const directory = new URL('../migrations/', import.meta.url);
   for (const file of readdirSync(directory).filter(name => name.endsWith('.sql')).sort()) {
     await db.exec(readFileSync(new URL(file, directory), 'utf8'));
     if (file === '202609170001_catalog.sql') await db.exec(readFileSync(new URL('../seed.sql', import.meta.url), 'utf8'));

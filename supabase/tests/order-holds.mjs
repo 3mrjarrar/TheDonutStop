@@ -1,3 +1,4 @@
+import { setupStorage } from './storage-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
@@ -8,7 +9,8 @@ try {
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema auth to anon, authenticated;
     grant execute on function auth.uid() to anon, authenticated;`);
-  const directory = new URL('../migrations/', import.meta.url);
+  await setupStorage(db);
+const directory = new URL('../migrations/', import.meta.url);
   for (const file of readdirSync(directory).filter(name => name.endsWith('.sql')).sort()) {
     if (file === '202609190011_order_holds.sql') {
       // Match the existing live schema: this flag predates our feature.

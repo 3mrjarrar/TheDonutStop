@@ -1,3 +1,4 @@
+import { setupStorage } from './storage-fixture.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 const { PGlite } = await import(process.env.PGLITE_MODULE || '@electric-sql/pglite');
@@ -6,6 +7,7 @@ await db.exec(`create role anon; create role authenticated; create schema auth;
 create table auth.users(id uuid primary key);
 create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
+await setupStorage(db);
 const directory = new URL('../migrations/', import.meta.url);
 for (const file of readdirSync(directory).filter(name => name.endsWith('.sql')).sort()) {
   await db.exec(readFileSync(new URL(file, directory), 'utf8'));
@@ -15,6 +17,8 @@ const products = (await db.query("select v.id, p.slug from product_variants v jo
 const mini = products.find(p => p.slug.includes('mini')).id;
 const regular = products.find(p => !p.slug.includes('mini')).id;
 const line = (id, quantity, price) => ({variant_id:id,category:'donuts',quantity,unit_price:price});
+// These tests isolate product eligibility; schedule boundaries have their own suite.
+await db.exec('update shared_offers set weekdays=array[1,2,3,4,5,6,7]');
 const rules = [['daily',5,1],['tuesday',7,5],['buy6get2',6,2],['buy7get3',7,3],['buy8get4',8,4],['buy6get6',6,6]];
 const calculate = async (lines, codes) => (await db.query('select calculate_donut_offer($1,true,$2) as q',[JSON.stringify(lines),codes])).rows[0].q;
 for (const [code,buy,free] of rules) {

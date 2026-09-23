@@ -103,3 +103,42 @@ Run `PGLITE_MODULE=/absolute/path/to/@electric-sql/pglite/dist/index.js node sup
 
 ### Homepage featured products
 Apply `migrations/202609190009_homepage_featured.sql` after the catalog seed and preceding migrations. Owners and managers assigned to an active branch can select four distinct donut products in **الصفحة الرئيسية** in the admin sidebar. Save commits the full ordered selection atomically; concurrent edits require a reload. Public pages fetch the selection on mount, window focus, and every 30 seconds. Before configuration is available, the original four products remain visible. Product images, descriptions, and base prices come from the website catalog; branch price overrides remain in the branch menu.
+
+## Dynamic offers and schedules
+
+Apply `migrations/202609230001_dynamic_offers.sql` after the preceding migrations,
+before deploying this frontend. It preserves existing switches, images and bundle
+quantities, seeds Tuesday's weekday and the morning window, and allows new bundle
+codes. No existing offer is automatically activated.
+
+Owners and managers assigned to an active branch can use **العروض → إضافة عرض جديد**
+to set paid/free quantities, weekdays, optional daily hours, optional start/end
+dates, and an optional image from their device. New offers are saved hidden; use their
+normal switch to publish. Text-only cards require no image. Existing offers can
+also have their schedule and optional image edited; custom offers additionally
+allow quantity changes. Removing the image on a custom offer restores its
+text-only card. All offers remain shared across branches, with the existing
+Icon Mall exclusion for the in-store drink offer.
+
+Schedules use `Asia/Hebron` (Palestine local time, including daylight saving).
+Hours start inclusively and end exclusively. An overnight window belongs to its
+starting weekday/date, including the early hours after its final scheduled date.
+With no hours selected, the offer lasts all day. Enabled cards display their
+schedule even outside their available hours; hiding removes them completely.
+The server filters discount rules and cart prompts by the current schedule and
+rechecks checkout totals, so client clocks and old quotes cannot grant expired
+promotions. Mini exclusions, cheapest-free bundles and best-discount-only pricing
+continue to apply. Existing stock and cart limits also apply to custom overlays.
+
+Verification: `npm test`, `npm run build`,
+`node supabase/tests/dynamic-offers.mjs`, `node supabase/tests/mini-donuts.mjs`,
+and `node supabase/tests/offers.mjs`. Database suites use an isolated PGlite
+instance (or `PGLITE_MODULE` pointing at its installed module); they do not change
+the live database. Only a publishable key is available locally, so apply the SQL
+through the project's trusted migration workflow or Supabase SQL editor.
+
+### Device image uploads
+
+Apply `migrations/202609230002_offer_image_uploads.sql` after the dynamic-offers migration. It creates the public `offer-images` Storage bucket with a 5 MB limit and JPEG, PNG, WebP and GIF support. Only active owners and managers assigned to an active branch may upload. Filenames are unique and existing images cannot be overwritten through the client. Images are uploaded on save; the stored public URL is internal and admins never need to enter a URL. Failed uploads leave the offer unchanged. Images can be previewed, replaced or removed in the editor; no image is required. Existing image URLs continue to display.
+
+Schedules still use local branch time, but the redundant timezone label is omitted from the UI.
