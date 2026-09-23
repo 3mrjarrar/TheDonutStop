@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { useCart } from './CartContext';
 import { orderItems } from '../../lib/offers';
 import { offerTitle } from '../../lib/offerCatalog';
@@ -32,6 +33,13 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
   const pending = useRef(null);
   const sendingRef = useRef(false);
   const total = quote ? Number(quote.total) + (delivery === 'delivery' ? Number(quote.delivery_fee) : 0) : null;
+  function clearCart() {
+    if (locked || sendingRef.current) return;
+    setCart([]);
+    setCheckout(false);
+    setDelivery('pickup');
+    setError('');
+  }
   const change = (id, delta) => setCart(previous => previous.map(item => item.id === id ? { ...item, quantity: item.quantity + delta } : item).filter(item => item.quantity > 0));
   const canIncrease = item => {
     const row = rows.find(row => row.product_variants.id === item.id);
@@ -90,7 +98,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
       }
     } finally { sendingRef.current = false; setSending(false); if (!pending.current) setLocked(false); }
   }
-  return <section className="cart-panel" aria-labelledby="cart-title"><h2 id="cart-title">{en ? 'Your cart' : 'سلة الطلب'}</h2><p>{en ? 'Your order is from ' : 'طلبك من فرع '}<strong>{en ? branch.name_en : branch.name_ar}</strong></p>
+  return <section className="cart-panel" aria-labelledby="cart-title"><div className="cart-heading"><h2 id="cart-title">{en ? 'Your cart' : 'سلة الطلب'}</h2>{cart.length > 0 && <button className="tab cart-clear" type="button" disabled={locked || sending} onClick={clearCart}><DeleteOutlineIcon aria-hidden="true" />{en ? 'Clear cart' : 'إفراغ السلة'}</button>}</div><p>{en ? 'Your order is from ' : 'طلبك من فرع '}<strong>{en ? branch.name_en : branch.name_ar}</strong></p>
     {!cart.length ? <p>{en ? 'Your cart is empty.' : 'السلة فارغة.'}</p> : <>
       <ul className="cart-lines">{cart.map(item => <li key={item.id}><div className="cart-product">{productImage(item) && <img src={productImage(item)} alt="" loading="lazy" decoding="async" />}<div><strong>{item.name}</strong> {item.size !== 'standard' && `(${item.size})`}<p>{quote?.lines.find(line => line.variant_id === item.id)?.unit_price ?? item.price} ₪ × {item.quantity}</p>{Number(quote?.lines.find(line => line.variant_id === item.id)?.free_quantity) > 0 && <small className="cart-free">{en ? 'Free donuts: ' : 'حبات مجانية: '}{quote.lines.find(line => line.variant_id === item.id).free_quantity}</small>}</div></div><div className="quantity-controls"><button type="button" disabled={locked} aria-label={`${en ? 'Decrease' : 'تقليل'} ${item.name}`} onClick={() => change(item.id,-1)}><RemoveIcon /></button><span>{item.quantity}</span><button type="button" disabled={locked || !canIncrease(item)} aria-label={`${en ? 'Increase' : 'زيادة'} ${item.name}`} onClick={() => change(item.id,1)}><AddIcon /></button><button type="button" disabled={locked} onClick={() => setCart(current => current.filter(value => value.id !== item.id))}>{en ? 'Remove' : 'حذف'}</button></div></li>)}</ul>
       {quote && Number(quote.discount) > 0 && <div className="cart-offer-summary" role="status"><strong>{offerTitle(quote.offer_code, en)}</strong><p>{en ? 'Subtotal' : 'قبل الخصم'}: {Number(quote.subtotal).toFixed(2)} ₪ · {en ? 'Discount' : 'الخصم'}: {Number(quote.discount).toFixed(2)} ₪</p>{<small>{en ? 'The better offer is applied. Offers cannot be combined.' : 'تم تطبيق العرض الأفضل لك دون جمع العروض.'}</small>}</div>}
