@@ -142,3 +142,13 @@ through the project's trusted migration workflow or Supabase SQL editor.
 Apply `migrations/202609230002_offer_image_uploads.sql` after the dynamic-offers migration. It creates the public `offer-images` Storage bucket with a 5 MB limit and JPEG, PNG, WebP and GIF support. Only active owners and managers assigned to an active branch may upload. Filenames are unique and existing images cannot be overwritten through the client. Images are uploaded on save; the stored public URL is internal and admins never need to enter a URL. Failed uploads leave the offer unchanged. Images can be previewed, replaced or removed in the editor; no image is required. Existing image URLs continue to display.
 
 Schedules still use local branch time, but the redundant timezone label is omitted from the UI.
+
+
+### Deleting offers
+
+Apply `migrations/202609230003_delete_shared_offers.sql` after the dynamic-offers migration. Owners and active branch managers can delete any offer from the shared admin list. The function removes its setting from every branch in one transaction, records the action in offer events, and preserves past orders. The UI confirms before deleting.
+
+
+### Deleting offers
+
+Apply `migrations/202609230003_delete_shared_offers.sql` after the dynamic-offers migration. Owners and active branch managers can delete an offer from the shared admin list. The function removes its setting from every branch in one transaction, logs the action, and preserves past orders. The UI confirms before deleting.

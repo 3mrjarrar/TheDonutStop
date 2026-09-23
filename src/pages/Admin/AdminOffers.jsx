@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import { supabase } from '../../lib/supabase';
 import { uploadOfferImage, offerUploadError } from '../../lib/offerImageUpload';
 import { hasDynamicOfferSetup, dynamicOfferSetupMessage, offerSaveError } from '../../lib/offerSetup';
@@ -61,6 +62,23 @@ export default function AdminOffers({ role }) {
       refresh();
     } finally { saving.current = false; setBusy(null); }
   }
+  async function removeOffer(offer, current) {
+    if (saving.current || !setupReady) return;
+    if (!window.confirm(`حذف عرض «${offerTitle(offer)}» نهائيًا من جميع الفروع؟ لا يؤثر ذلك في الطلبات السابقة.`)) return;
+    saving.current = true; setBusy(`delete:${offer.code}`); setFailure(''); setMessage('');
+    try {
+      const { error: problem } = await supabase.rpc('delete_shared_offer', {
+        p_code: offer.code, p_expected_updated_at: current.updated_at,
+      });
+      if (problem) throw problem;
+      setMessage(`تم حذف عرض ${offerTitle(offer)} من جميع الفروع.`);
+      window.dispatchEvent(new Event('donut-offers-changed'));
+      refresh();
+    } catch (problem) {
+      setFailure(offerSaveError(problem));
+      refresh();
+    } finally { saving.current = false; setBusy(null); }
+  }
   return <section className="admin-panel">
     <div className="admin-toolbar"><h2>العروض — جميع الفروع</h2><a href="/#offers" target="_blank" rel="noreferrer">معاينة في الموقع ↗</a></div>
     <p>العروض مشتركة بين جميع الفروع. تفعيل أو إخفاء أي عرض يطبّق على الكل. عروض المشروبات لا تشمل Icon Mall. يُطبّق أكبر خصم مستحق دون جمع العروض.</p>
@@ -80,10 +98,13 @@ export default function AdminOffers({ role }) {
           {offer.displayOnly && <p><strong>للعرض فقط — لا يغيّر حساب السلة.</strong></p>}
           <button type="button" role="switch" aria-checked={enabled} aria-label={`${enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer)}`} disabled={!!busy || !!editor || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
           {allowed && <button type="button" className="secondary" disabled={!!busy || !!editor || !setupReady} onClick={() => setEditor(current)}>تعديل العرض والمواعيد</button>}
+          {allowed && <button type="button" className="admin-offer-delete" disabled={!!busy || !!editor || !setupReady} onClick={() => removeOffer(offer, current)} aria-label={`حذف عرض ${offerTitle(offer)}`}>
+            <DeleteOutlineIcon aria-hidden="true" />{busy === `delete:${offer.code}` ? 'جارٍ الحذف…' : 'حذف العرض'}
+          </button>}
           {!allowed && <small>{'للمدير والمالك فقط'}</small>}
           {!current && <small>إعدادات هذا العرض غير متاحة.</small>}
         </div>
       </article>;
-    })}</div>}
+    })}{!rows.length && <p role="status">لا توجد عروض حاليًا. يمكنك إضافة عرض جديد.</p>}</div>}
   </section>;
 }

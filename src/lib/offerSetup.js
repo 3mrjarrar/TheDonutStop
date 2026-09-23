@@ -1,7 +1,8 @@
 export const dynamicOfferSetupMessage = 'إعداد العروض الجديدة غير مكتمل. شغّل ملف 202609230001_dynamic_offers.sql كاملًا في محرر SQL في Supabase، ثم اضغط إعادة التحقق. ملف رفع الصور وحده لا يكفي.';
 
 export function hasDynamicOfferSetup(rows) {
-  return rows.length > 0 && rows.every(row => ['buy_quantity', 'free_quantity', 'custom', 'weekdays', 'image_url', 'start_time', 'end_time', 'starts_on', 'ends_on'].every(key => Object.hasOwn(row, key)));
+  // A successful empty result means every offer was deleted, rather than a legacy schema.
+  return rows.length === 0 || rows.every(row => ['buy_quantity', 'free_quantity', 'custom', 'weekdays', 'image_url', 'start_time', 'end_time', 'starts_on', 'ends_on'].every(key => Object.hasOwn(row, key)));
 }
 
 export function offerSaveError(problem) {

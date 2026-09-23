@@ -78,6 +78,29 @@ await assert.rejects(db.query('select place_guest_order($1,$2,$3,$4,$5)',[crypto
 await asUser(owner);
 await db.query('select set_shared_offer($1,false,true)',[code]);
 assert.equal((await db.query('select count(*)::int as n from branch_offers where code=$1 and enabled',[code])).rows[0].n,0);
+// Delete is restricted, concurrency-safe, audited, shared across branches and retry-safe.
+await asUser('', 'anon'); await assert.rejects(db.query('select delete_shared_offer($1,$2)',[code,row.updated_at]));
+await asUser(staff); await assert.rejects(db.query('select delete_shared_offer($1,$2)',[code,row.updated_at]));
+await asUser(manager);
+row=(await db.query('select updated_at::text as stamp from shared_offers where code=$1',[code])).rows[0];
+await assert.rejects(db.query('select delete_shared_offer($1,$2)',[code,'2000-01-01']),/Offer changed/);
+const auditBeforeDelete=Number((await db.query('select count(*) from offer_events where code=$1',[code])).rows[0].count);
+const branchRowsBeforeDelete=Number((await db.query('select count(*) from branch_offers where code=$1',[code])).rows[0].count);
+await db.query('select delete_shared_offer($1,$2)',[code,row.stamp]);
+await db.query('select delete_shared_offer($1,$2)',[code,row.stamp]);
+assert.equal((await db.query('select count(*)::int as n from shared_offers where code=$1',[code])).rows[0].n,0);
+assert.equal((await db.query('select count(*)::int as n from branch_offers where code=$1',[code])).rows[0].n,0);
+assert.ok(Number((await db.query('select count(*) from offer_events where code=$1',[code])).rows[0].count)>auditBeforeDelete);
+// Built-in offers can also be removed, and an empty offer list is a valid setup.
+await asUser(owner);
+const builtIn=(await db.query("select updated_at::text as stamp from shared_offers where code='daily'")).rows[0];
+const builtInRows=Number((await db.query("select count(*) from branch_offers where code='daily'")).rows[0].count);
+await db.query('select delete_shared_offer($1,$2)',['daily',builtIn.stamp]);
+assert.equal((await db.query('select count(*)::int as n from branch_offers')).rows[0].n,21-builtInRows);
+await asUser(manager);
+for (const setting of (await db.query('select code,updated_at::text as stamp from shared_offers')).rows) await db.query('select delete_shared_offer($1,$2)',[setting.code,setting.stamp]);
+assert.equal((await db.query('select count(*) from shared_offers')).rows[0].count,0);
+await db.exec('reset role');
 // Reapplying storage setup repairs partial setup without removing stored objects.
 await db.exec('reset role');
 await db.exec(readFileSync(new URL('../migrations/202609230002_offer_image_uploads.sql',import.meta.url),'utf8'));
@@ -109,5 +132,6 @@ assert.deepEqual((await db.query('select * from shared_offers order by code')).r
 assert.deepEqual((await db.query('select * from branch_offers order by branch_id,code')).rows,branchesBefore);
 console.log('PASS: missing old constraints, partial columns and repeated dynamic migrations preserve all offer data and schedules.');
 console.log('PASS: offer image storage permissions, immutable paths, public reads and bucket limits.');
+console.log('PASS: shared offer deletion, role restrictions, stale edit protection, audit history and idempotent retries.');
 console.log('PASS: dynamic offer creation/editing, permissions, optional images, constraints, schedule boundaries/overnight/DST, branch synchronization, quotes and stale checkout.');
 await db.close();
