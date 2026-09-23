@@ -20,6 +20,18 @@ try {
   assert.equal(await openAt('TERI', '2026-09-18 23:59:59'), true);
   assert.equal(await openAt('TERI', '2026-09-19 00:00:00'), false);
   assert.equal(await openAt('UNKNOWN', '2026-09-18 12:00:00'), false);
+  for (const code of ['NAB', 'ICON', 'TERI']) {
+    assert.equal(await openAt(code, '2026-09-22 18:31:00'), true, `${code} accepts orders at 6:31 PM`);
+  }
+  assert.equal(await openAt('NAB', '2026-09-22 10:59:59'), false);
+  assert.equal(await openAt('NAB', '2026-09-22 11:00:00'), true);
+  assert.equal(await openAt('NAB', '2026-09-25 00:59:59'), true);
+  assert.equal(await openAt('NAB', '2026-09-25 01:00:00'), false);
+  assert.equal(await openAt('NAB', '2026-09-23 00:00:00'), false);
+  assert.equal(await openAt('ICON', '2026-09-22 22:59:59'), true);
+  assert.equal(await openAt('ICON', '2026-09-22 23:00:00'), false);
+  assert.equal(await openAt('ICON', '2026-09-24 23:59:59'), true);
+  assert.equal(await openAt('ICON', '2026-09-25 00:00:00'), false);
   for (const date of ['2026-07-12', '2026-12-13']) {
     await db.exec("set time zone 'America/New_York'");
     assert.equal(await openAt('TERI', `${date} 07:30:00`), true);

@@ -1,5 +1,21 @@
 # Supabase foundation
 
+## Ordering hours compatibility
+
+The live database exposes `branch_ordering_status(p_branch)` with `accepting`,
+`reason`, `orders_paused`, and preparation-time rules. Checkout uses that server
+decision every 15 seconds, on focus/reconnection, and before placing an order.
+It does not use the customer's device time. If that RPC is absent, the frontend
+supports the original `get_branch_ordering_status` server-clock RPC. Network
+and permission errors do not bypass the check; the ten-second timeout remains.
+
+For databases built from this repository's original ordering-hours migration,
+apply `202609220001_complete_ordering_hours.sql` after `202609190010_ordering_hours.sql`.
+It adds the missing Nablus and Icon Mall schedules, with Thursday-Saturday
+weekend closing times and Nablus's overnight hours, preserving existing rows.
+The live frontend compatibility fix requires no database migration; do not apply
+this schema-specific migration to a differently managed live hours schema.
+
 ## Remove automatically enabled offers
 
 After migrations `202609190001_managed_offers.sql` and

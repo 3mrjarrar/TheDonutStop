@@ -22,7 +22,7 @@ export default function Cart({ branch, cart, setCart, rows, en, locked, setLocke
   const pauseMessage = en ? 'This branch has temporarily paused new orders. You can keep adding to your cart. Please come back when orders resume.' : 'أوقف هذا الفرع استقبال الطلبات مؤقتًا. يمكنك متابعة إضافة المنتجات إلى السلة. يرجى العودة لتأكيد طلبك عند استئناف استقبال الطلبات.';
 
   const { status: hours, refresh: refreshHours } = useOrderingHours(branch.id);
-  const closedMessage = en ? 'This branch is closed right now. You can keep adding to your cart, but please come back during opening hours to confirm your order.' : 'هذا الفرع مغلق حاليًا. يمكنك متابعة إضافة المنتجات إلى السلة، لكن يرجى العودة خلال أوقات الدوام لتأكيد طلبك.';
+  const closedMessage = hours?.reason === 'paused' ? pauseMessage : (en ? 'This branch is not accepting orders right now. Please check its opening hours and try again later.' : 'هذا الفرع لا يستقبل الطلبات حاليًا. يرجى التحقق من أوقات الدوام والمحاولة لاحقًا.');
   const hoursError = en ? 'Unable to check opening hours. Please retry before confirming your order.' : 'تعذّر التحقق من أوقات الدوام. يرجى إعادة المحاولة قبل تأكيد الطلب.';
   const [checkout, setCheckout] = useState(false);
   const [delivery, setDelivery] = useState('pickup');

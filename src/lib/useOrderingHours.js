@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from './supabase';
+import { getOrderingStatus } from './orderingHours';
 
 // The database clock is authoritative, including when a customer's device is abroad.
 export default function useOrderingHours(branchId) {
@@ -10,10 +11,8 @@ export default function useOrderingHours(branchId) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
-      if (!supabase || !branchId) throw new Error('Unavailable');
-      const { data, error } = await supabase.rpc('get_branch_ordering_status', { p_branch: branchId }).abortSignal(controller.signal);
-      if (error || typeof data?.open !== 'boolean') throw error || new Error('Invalid status');
-      if (request === sequence.current) setStatus({ branchId, open: data.open, failed: false });
+      const data = await getOrderingStatus(supabase, branchId, controller.signal);
+      if (request === sequence.current) setStatus({ branchId, ...data, failed: false });
       return data.open;
     } catch {
       if (request === sequence.current) setStatus({ branchId, open: false, failed: true });
@@ -26,7 +25,8 @@ export default function useOrderingHours(branchId) {
     refresh();
     const timer = setInterval(refresh, 15000);
     window.addEventListener('focus', refresh);
-    return () => { sequence.current++; clearInterval(timer); window.removeEventListener('focus', refresh); };
+    window.addEventListener('online', refresh);
+    return () => { sequence.current++; clearInterval(timer); window.removeEventListener('focus', refresh); window.removeEventListener('online', refresh); };
   }, [refresh]);
   return { status: status?.branchId === branchId ? status : null, refresh };
 }
