@@ -16,6 +16,7 @@ import { isAvailable, tracksQuantity } from '../../lib/availability';
 import StaffLogin from './StaffLogin';
 import { useLanguage } from '../../i18n/LanguageContext';
 import AddProduct from './AddProduct';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 
 const actions = { restock: 'إضافة مخزون', waste: 'تسجيل تالف', count: 'تصحيح الجرد', unavailable: 'إيقاف البيع', available: 'إعادة إتاحة البيع' };
 const unwrap = ({ data, error }) => { if (error) throw error; return data; };
@@ -91,7 +92,7 @@ export default function Admin() {
     if (!branch || profile?.role === 'order_staff') { setLoading(false); return; }
     setLoading(true); setError('');
     Promise.all([
-      supabase.from('branch_inventory').select('*, product_variants!inner(id,size,price,products!inner(name,slug,category,image_path))').eq('branch_id', branch).then(unwrap),
+      supabase.from('branch_inventory').select('*, product_variants!inner(id,size,price,products!inner(id,name,slug,category,image_path))').eq('branch_id', branch).eq('product_variants.products.active', true).then(unwrap),
       supabase.from('inventory_events').select('*').eq('branch_id', branch).order('created_at', { ascending: false }).limit(30).then(unwrap),
     ]).then(([inventory, history]) => { if (live) { setRows(inventory); setEvents(history); } })
       .catch(() => { if (live) setError('تعذّر تحميل المخزون والسجل. تحقق من تطبيق ملف إعداد لوحة الإدارة ثم أعد المحاولة.'); })
@@ -155,6 +156,26 @@ export default function Admin() {
       setError(problem.code === '22023' ? (edit.action === 'price' ? 'أدخل سعرًا صالحًا بمنزلتين عشريتين كحد أقصى وسببًا للتعديل (حرفان على الأقل).' : 'بعد أول إضافة يجب كتابة سبب التعديل (حرفان على الأقل).') : problem.code === '40001' ? 'تغيّرت بيانات الصنف منذ فتح النموذج. أغلقه واضغط تحديث قبل التعديل.' : 'تعذّر الحفظ. تحقق من الكمية والصلاحيات والاتصال، ثم حاول مجددًا.');
     } finally { saving.current = false; setBusy(false); }
   }
+  async function deleteProduct(product) {
+    if (saving.current) return;
+    if (!window.confirm(`حذف المنتج «${product.name}» وجميع أحجامه من جميع الفروع؟ ستبقى الطلبات السابقة محفوظة.`)) return;
+    saving.current = true; setBusy(true); setError(''); setMessage('');
+    try {
+      unwrap(await supabase.rpc('delete_catalog_product', { p_product: product.id }));
+      const remaining = unwrap(await supabase.from('products').select('id').eq('id', product.id).eq('active', true));
+      if (remaining.length) throw new Error('DELETE_NOT_APPLIED');
+      setRows(current => current.filter(row => row.product_variants.products.id !== product.id));
+      setEdit(null);
+      setRevision(value => value + 1);
+      setMessage(`تم حذف المنتج «${product.name}» من جميع الفروع.`);
+    } catch (problem) {
+      setError(problem.code === '42501' ? 'ليس لديك صلاحية حذف المنتجات.' : problem.code === 'PGRST202' || problem.message === 'DELETE_NOT_APPLIED' ? 'لم يتم حذف المنتج. طبّق ملف 202609230005_delete_products.sql في Supabase لتحديث وظيفة الحذف ثم أعد المحاولة.' : 'تعذّر تأكيد حذف المنتج. حدّث المخزون وتحقق من الاتصال قبل إعادة المحاولة.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally { saving.current = false; setBusy(false); }
+  }
+  function deleteProductButton(product) {
+    return <button type="button" className="admin-offer-delete admin-product-delete" disabled={busy} onClick={() => deleteProduct(product)} aria-label={`حذف المنتج ${product.name}`}><DeleteOutlinedIcon aria-hidden="true" />حذف المنتج</button>;
+  }
   async function logout() {
     setBusy(true);
     try {
@@ -202,7 +223,8 @@ export default function Admin() {
           <div className="admin-stock-heading"><h3>{row.product_variants.products.name}</h3><span><bdi>{inventoryPrice(row).toFixed(2)} ₪</bdi></span></div>
           <div className="admin-stock-level"><strong>{row.quantity}</strong><span>حبة في المخزون</span><small>{!row.carried ? 'غير مدرج' : isAvailable('donuts', row) ? 'متوفر للبيع' : 'غير متوفر للبيع'}</small></div>
           {edit?.row.variant_id === row.variant_id ? <div ref={editPanel} tabIndex={-1}><InventoryEditor key={edit.requestId} edit={edit} busy={busy} onSave={save} onCancel={() => setEdit(null)} /></div> : <div className="admin-stock-actions"><button disabled={busy} onClick={() => openInventory(row)}>+ إضافة كمية</button><button className="secondary" disabled={busy} onClick={() => openInventory(row, 'price')}>تعديل السعر</button><button className="secondary" disabled={busy} onClick={() => openInventory(row, 'count')}>تصحيح العدد</button><button className="secondary" disabled={busy} onClick={() => openInventory(row, 'waste')}>تسجيل تالف</button><button className="secondary" disabled={busy} onClick={() => openInventory(row, row.manual_unavailable ? 'available' : 'unavailable')}>{row.manual_unavailable ? 'إتاحة البيع' : 'إيقاف البيع'}</button></div>}
-        </article>)}<AddProduct {...productSection} onSaved={() => { setSearch(''); setMessage('تمت إضافة المنتج إلى قائمة الطعام.'); setRevision(value => value + 1); }} /></div> : <><div className="admin-table-wrap"><table><thead><tr><th>الصنف</th><th aria-sort="ascending">السعر ↑</th><th>الكمية</th><th>التوفر</th><th>تعديل</th></tr></thead><tbody>{visibleRows.map(row => <tr key={row.variant_id}><td><div className="admin-product-cell"><img src={inventoryProductImage(row.product_variants.products)} alt="" loading="lazy" decoding="async" /><span>{row.product_variants.products.name} {row.product_variants.size !== 'standard' && `(${row.product_variants.size})`}</span></div></td><td><bdi>{inventoryPrice(row).toFixed(2)} ₪</bdi></td><td>{tracksQuantity(row.product_variants.products.category) ? row.quantity : 'لا يُقاس بالكمية'}</td><td>{!row.carried ? 'غير مدرج' : isAvailable(row.product_variants.products.category, row) ? 'متوفر' : 'غير متوفر'}</td><td><button disabled={busy} onClick={() => setEdit({ row, action: tracksQuantity(row.product_variants.products.category) ? 'restock' : row.manual_unavailable ? 'available' : 'unavailable', requestId: crypto.randomUUID() })}>{tracksQuantity(row.product_variants.products.category) ? 'تعديل المخزون' : 'تغيير الحالة'}</button><button className="secondary" disabled={busy} onClick={() => openInventory(row, 'price')}>تعديل السعر</button></td></tr>)}</tbody></table></div><AddProduct {...productSection} onSaved={() => { setSearch(''); setMessage('تمت إضافة المنتج إلى قائمة الطعام.'); setRevision(value => value + 1); }} /></>}{inventoryType !== 'donuts' && edit && <div ref={editPanel} tabIndex={-1}><InventoryEditor key={edit.requestId} edit={edit} busy={busy} onSave={save} onCancel={() => setEdit(null)} /></div>}{!visibleRows.length && <p>لا توجد أصناف مطابقة في هذا القسم.</p>}</section>
+          {deleteProductButton(row.product_variants.products)}
+        </article>)}<AddProduct {...productSection} onSaved={() => { setSearch(''); setMessage('تمت إضافة المنتج إلى قائمة الطعام.'); setRevision(value => value + 1); }} /></div> : <><div className="admin-table-wrap"><table><thead><tr><th>الصنف</th><th aria-sort="ascending">السعر ↑</th><th>الكمية</th><th>التوفر</th><th>تعديل</th></tr></thead><tbody>{visibleRows.map(row => <tr key={row.variant_id}><td><div className="admin-product-cell"><img src={inventoryProductImage(row.product_variants.products)} alt="" loading="lazy" decoding="async" /><span>{row.product_variants.products.name} {row.product_variants.size !== 'standard' && `(${row.product_variants.size})`}</span></div></td><td><bdi>{inventoryPrice(row).toFixed(2)} ₪</bdi></td><td>{tracksQuantity(row.product_variants.products.category) ? row.quantity : 'لا يُقاس بالكمية'}</td><td>{!row.carried ? 'غير مدرج' : isAvailable(row.product_variants.products.category, row) ? 'متوفر' : 'غير متوفر'}</td><td><button disabled={busy} onClick={() => setEdit({ row, action: tracksQuantity(row.product_variants.products.category) ? 'restock' : row.manual_unavailable ? 'available' : 'unavailable', requestId: crypto.randomUUID() })}>{tracksQuantity(row.product_variants.products.category) ? 'تعديل المخزون' : 'تغيير الحالة'}</button><button className="secondary" disabled={busy} onClick={() => openInventory(row, 'price')}>تعديل السعر</button>{deleteProductButton(row.product_variants.products)}</td></tr>)}</tbody></table></div><AddProduct {...productSection} onSaved={() => { setSearch(''); setMessage('تمت إضافة المنتج إلى قائمة الطعام.'); setRevision(value => value + 1); }} /></>}{inventoryType !== 'donuts' && edit && <div ref={editPanel} tabIndex={-1}><InventoryEditor key={edit.requestId} edit={edit} busy={busy} onSave={save} onCancel={() => setEdit(null)} /></div>}{!visibleRows.length && <p>لا توجد أصناف مطابقة في هذا القسم.</p>}</section>
 
         <section className="admin-panel"><h2>آخر 30 تعديلًا</h2>{visibleEvents.length ? <ul className="admin-history">{visibleEvents.map(item => <li key={item.id}><strong>{rows.find(row => row.variant_id === item.variant_id)?.product_variants.products.name || 'صنف'}</strong> — {actions[item.action] || item.action}: {!['available', 'unavailable'].includes(item.action) && <b dir="ltr">{item.delta > 0 ? '+' : ''}{item.delta}</b>} — {item.reason}<small>{new Date(item.created_at).toLocaleString('ar')} · بواسطة {item.actor_id === session.user.id ? profile.name : item.actor_id}</small></li>)}</ul> : <p>لم تُسجّل تعديلات بعد.</p>}</section>
       </>}
