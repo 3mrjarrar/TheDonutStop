@@ -3,17 +3,23 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useCart } from './CartContext';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getBranchMenu } from '../../lib/supabase';
-import { isAvailable } from '../../lib/availability';
-import { offerPrompt, isOfferEligible } from '../../lib/offers';
+import { offerCapacity, addOfferSelection } from '../../lib/offerSelection';
+import { offerPrompt } from '../../lib/offers';
 import { findOffer, offerTitle } from '../../lib/offerCatalog';
 import './cart.css';
 
 function OfferDialog({ offer, branch, cart, setCart, en, onClose }) {
   const dialog = useRef(null);
+  const submittingRef = useRef(false);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [revision, setRevision] = useState(0);
+  const [selection, setSelection] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const total = Object.values(selection).reduce((sum, quantity) => sum + quantity, 0);
+  const newLines = Object.entries(selection).filter(([id, quantity]) => quantity > 0 && !cart.some(item => item.id === id)).length;
   useEffect(() => {
     const previous = document.activeElement;
     dialog.current.showModal();
@@ -25,24 +31,63 @@ function OfferDialog({ offer, branch, cart, setCart, en, onClose }) {
     getBranchMenu(branch.id).then(data => { if (live) setRows(data); }).catch(() => { if (live) setFailed(true); }).finally(() => { if (live) setLoading(false); });
     return () => { live = false; };
   }, [branch.id, revision]);
-  const options = rows.filter(row => {
-    const variant = row.product_variants;
-    const existing = cart.find(item => item.id === variant.id);
-    const price = Number(row.price_override ?? variant.price);
-    return isOfferEligible(variant.products) && isAvailable('donuts',row)
-      && (!findOffer(offer.type)?.eligiblePrices || findOffer(offer.type).eligiblePrices.includes(price))
-      && (existing?.quantity || 0) < Math.min(99,row.quantity) && (existing || cart.length < 50);
-  }).sort((a,b) => Number(a.price_override ?? a.product_variants.price) - Number(b.price_override ?? b.product_variants.price));
-  function add(row) {
-    const variant = row.product_variants;
-    setCart(current => current.some(item => item.id === variant.id) ? current.map(item => item.id === variant.id ? {...item,quantity:item.quantity+1} : item) : [...current,{id:variant.id,name:variant.products.name,slug:variant.products.slug,size:variant.size,category:'donuts',price:Number(row.price_override ?? variant.price),quantity:1}]);
+  const options = rows.filter(row => offerCapacity(row, cart, offer.type) > 0 || selection[row.product_variants.id])
+    .sort((a,b) => Number(a.price_override ?? a.product_variants.price) - Number(b.price_override ?? b.product_variants.price));
+  function maximum(row) {
+    const id = row.product_variants.id;
+    const quantity = selection[id] || 0;
+    if (!quantity && !cart.some(item => item.id === id) && cart.length + newLines >= 50) return 0;
+    return Math.min(offerCapacity(row, cart, offer.type), offer.remaining - total + quantity);
   }
-  return <dialog ref={dialog} className="quantity-dialog offer-dialog" aria-labelledby="offer-dialog-title" onCancel={onClose} onClick={event => { if (event.target === dialog.current) onClose(); }}>
-    <button className="dialog-close" type="button" aria-label={en ? 'Close' : 'إغلاق'} onClick={onClose}><CloseIcon /></button>
+  function choose(row, value) {
+    setError('');
+    setSelection(current => ({ ...current, [row.product_variants.id]: Math.max(0, Math.min(maximum(row), Math.trunc(Number(value) || 0))) }));
+  }
+  async function add() {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true); setError('');
+    try {
+      const freshRows = await getBranchMenu(branch.id);
+      setRows(freshRows);
+      if (!addOfferSelection(cart, freshRows, selection, offer)) {
+        setSelection({});
+        setError(en ? 'Availability changed. Please choose your donuts again.' : 'تغيّر المخزون المتوفر. يرجى اختيار الدونات مجددًا.');
+        return;
+      }
+      setCart(current => addOfferSelection(current, freshRows, selection, offer) || current);
+      onClose();
+    } catch {
+      setError(en ? 'Unable to check availability. Please try again.' : 'تعذّر التحقق من المخزون. يرجى المحاولة مجددًا.');
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  }
+  return <dialog ref={dialog} className="quantity-dialog offer-dialog" aria-labelledby="offer-dialog-title" onCancel={event => { if (submitting) event.preventDefault(); else onClose(); }} onClick={event => { if (!submitting && event.target === dialog.current) onClose(); }}>
+    <button className="dialog-close" type="button" aria-label={en ? 'Close' : 'إغلاق'} disabled={submitting} onClick={onClose}><CloseIcon /></button>
     <h2 id="offer-dialog-title">{offerTitle(offer.type, en)}</h2>
-    <p>{en ? `Add ${offer.remaining} more donuts to complete this offer. The best eligible discount is calculated automatically.` : `أضف ${offer.remaining} حبات لإكمال مجموعة العرض. يُحسب أكبر خصم مستحق تلقائيًا.`}{findOffer(offer.type)?.eligiblePrices && (en ? ' Choose the free donut from the ₪6 and ₪7 varieties.' : 'اختر الحبة المجانية من أصناف 6 أو 7 شيكل.')}</p>
-    {loading ? <p role="status">{en ? 'Loading available donuts…' : 'جارٍ تحميل الدونات المتوفرة…'}</p> : failed ? <div role="alert"><p>{en ? 'Unable to load donuts.' : 'تعذّر تحميل الأصناف.'}</p><button className="tab" onClick={() => setRevision(value=>value+1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : <div className="offer-options">{options.map(row => <button type="button" key={row.product_variants.id} onClick={() => add(row)}><span className="offer-option-product"><img src={row.product_variants.products.image_path} alt="" loading="lazy" decoding="async" /><span>{row.product_variants.products.name}</span></span><bdi>{row.price_override ?? row.product_variants.price} ₪</bdi></button>)}{!options.length && <p>{en ? 'No eligible donuts are available at this branch right now.' : 'لا توجد أصناف متوفرة لهذا العرض في الفرع حاليًا.'}</p>}</div>}
-    <button className="tab quantity-confirm" type="button" onClick={onClose}>{en ? 'Continue without adding' : 'متابعة بدون إضافة'}</button>
+    <p>{en ? `Choose ${offer.remaining} more donuts to complete this offer, then add your selection to cart. The best eligible discount is calculated automatically.` : `اختر ${offer.remaining} حبات لإكمال مجموعة العرض، ثم أضف اختياراتك إلى السلة. يُحسب أكبر خصم مستحق تلقائيًا.`}{findOffer(offer.type)?.eligiblePrices && (en ? ' Choose the free donut from the ₪6 and ₪7 varieties.' : 'اختر الحبة المجانية من أصناف 6 أو 7 شيكل.')}</p>
+    {loading ? <p role="status">{en ? 'Loading available donuts…' : 'جارٍ تحميل الدونات المتوفرة…'}</p> : failed ? <div role="alert"><p>{en ? 'Unable to load donuts.' : 'تعذّر تحميل الأصناف.'}</p><button className="tab" onClick={() => setRevision(value=>value+1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : <div className="offer-options">{options.map(row => {
+      const id = row.product_variants.id;
+      const name = row.product_variants.products.name;
+      const quantity = selection[id] || 0;
+      return <div className="offer-option" key={id}>
+        <span className="offer-option-product"><img src={row.product_variants.products.image_path} alt="" loading="lazy" decoding="async" /><span>{name}</span></span>
+        <bdi>{row.price_override ?? row.product_variants.price} ₪</bdi>
+        <div className="quantity-controls">
+          <button type="button" disabled={submitting || quantity === 0} aria-label={en ? `Remove one ${name}` : `تقليل ${name}`} onClick={() => choose(row, quantity - 1)}>−</button>
+          <input type="number" inputMode="numeric" min="0" max={maximum(row)} step="1" value={quantity} disabled={submitting} aria-label={en ? `Quantity of ${name}` : `كمية ${name}`} onChange={event => choose(row, event.target.value)} />
+          <button type="button" disabled={submitting || quantity >= maximum(row)} aria-label={en ? `Add one ${name}` : `زيادة ${name}`} onClick={() => choose(row, quantity + 1)}>+</button>
+        </div>
+      </div>;
+    })}{!options.length && <p>{en ? 'No eligible donuts are available at this branch right now.' : 'لا توجد أصناف متوفرة لهذا العرض في الفرع حاليًا.'}</p>}</div>}
+    <div className="offer-actions">
+      <p role="status" aria-live="polite">{en ? `${total} of ${offer.remaining} selected` : `تم اختيار ${total} من ${offer.remaining}`}</p>
+      {error && <p role="alert" className="cart-error">{error}</p>}
+      <button className="tab quantity-confirm" type="button" disabled={loading || failed || submitting || !total} onClick={add}>{submitting ? (en ? 'Checking availability…' : 'جارٍ التحقق من المخزون…') : (en ? `Add ${total} to cart` : `إضافة ${total} إلى السلة`)}</button>
+      <button className="tab quantity-confirm" type="button" disabled={submitting} onClick={onClose}>{en ? 'Continue without adding' : 'متابعة بدون إضافة'}</button>
+    </div>
   </dialog>;
 }
 export default function OfferPrompt() {
