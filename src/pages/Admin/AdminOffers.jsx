@@ -96,11 +96,13 @@ export default function AdminOffers({ role }) {
         <OfferPoster image={offer.image} imageUrl={offer.imageUrl} alt={offerTitle(offer)} />
         <div><span className={enabled ? 'offer-enabled' : 'offer-disabled'}>{enabled ? 'مفعّل · ظاهر للزبائن' : 'معطّل · مخفي'}</span><h3>{offerTitle(offer)}</h3><p>{offerDetails(offer)}</p><p>{offerAvailability(offer)}</p><p>{offerSchedule(offer)}</p>
           {offer.displayOnly && <p><strong>للعرض فقط — لا يغيّر حساب السلة.</strong></p>}
-          <button type="button" role="switch" aria-checked={enabled} aria-label={`${enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer)}`} disabled={!!busy || !!editor || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
-          {allowed && <button type="button" className="secondary" disabled={!!busy || !!editor || !setupReady} onClick={() => setEditor(current)}>تعديل العرض والمواعيد</button>}
-          {allowed && <button type="button" className="admin-offer-delete" disabled={!!busy || !!editor || !setupReady} onClick={() => removeOffer(offer, current)} aria-label={`حذف عرض ${offerTitle(offer)}`}>
-            <DeleteOutlineIcon aria-hidden="true" />{busy === `delete:${offer.code}` ? 'جارٍ الحذف…' : 'حذف العرض'}
-          </button>}
+          <div className="admin-offer-actions">
+            <button type="button" role="switch" aria-checked={enabled} aria-label={`${enabled ? 'تعطيل' : 'تفعيل'} ${offerTitle(offer)}`} disabled={!!busy || !!editor || !allowed || !current} onClick={() => toggle(offer, current)}>{busy === offer.code ? 'جارٍ الحفظ…' : enabled ? 'تعطيل وإخفاء' : 'تفعيل وإظهار'}</button>
+            {allowed && <button type="button" className="secondary" disabled={!!busy || !!editor || !setupReady} onClick={() => setEditor(current)}>تعديل العرض والمواعيد</button>}
+            {allowed && <button type="button" className="admin-offer-delete" disabled={!!busy || !!editor || !setupReady} onClick={() => removeOffer(offer, current)} aria-label={`حذف عرض ${offerTitle(offer)}`}>
+              <DeleteOutlineIcon aria-hidden="true" />{busy === `delete:${offer.code}` ? 'جارٍ الحذف…' : 'حذف العرض'}
+            </button>}
+          </div>
           {!allowed && <small>{'للمدير والمالك فقط'}</small>}
           {!current && <small>إعدادات هذا العرض غير متاحة.</small>}
         </div>
