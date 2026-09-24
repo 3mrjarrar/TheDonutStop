@@ -9,7 +9,7 @@ test('every current menu product maps into the separate admin inventory sections
     const group = inventoryGroup({ category, name });
     counts[group] = (counts[group] || 0) + 1;
   }
-  assert.deepEqual(counts, { donuts: 34, hot: 20, cold: 10, mojito: 17, smoothies: 7, frappe: 3 });
+  assert.deepEqual(counts, { donuts: 38, hot: 22, cold: 12, mojito: 17, smoothies: 7, frappe: 3 });
 });
 
 test('inventory sorts numerically by actual branch price, including overrides and sizes', () => {

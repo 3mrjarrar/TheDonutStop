@@ -18,13 +18,22 @@ export default function MenuCatalog() {
     setCategory(categories[next][0]);
     document.getElementById(`tab-${categories[next][0]}`)?.focus();
   }
-  const heading = index => category === 'cold' ? ({ 0: 'مشروبات باردة', 10: 'نكهات الموهيتو', 21: 'خلطات الموهيتو' })[index] : category === 'blends' ? ({ 0: 'سموذي', 7: 'فرابيه' })[index] : null;
+  const priceFor = ([, price]) => {
+    if (typeof price === 'number') return price;
+    const prices = price.match(/^S (\d+) \/ L (\d+)$/);
+    return Number(prices[1]);
+  };
+  const groups = category === 'cold'
+    ? [['مشروبات باردة', menu.cold.filter(([name]) => !name.includes('Mojito'))], ['نكهات الموهيتو', menu.cold.filter(([name]) => name.includes('Mojito'))]]
+    : category === 'blends'
+      ? [['سموذي', menu.blends.filter(([name]) => name.includes('Smoothie'))], ['فرابيه', menu.blends.filter(([name]) => name.includes('Frappe'))]]
+      : [[null, menu[category]]];
   return <>
     <div className="tabs" role="tablist" aria-label={t('فئات المنيو')}>
       {categories.map(([key, label], index) => <button key={key} id={`tab-${key}`} type="button" className={`tab${category === key ? ' active' : ''}`} role="tab" aria-selected={category === key} aria-controls="menu-list" tabIndex={category === key ? 0 : -1} onKeyDown={event => moveTab(event, index)} onClick={() => setCategory(key)}>{t(label)}</button>)}
     </div>
     <div id="menu-list" className={`menu-grid ${category === 'donuts' ? 'donut-grid' : 'hot-drink-grid'}`} role="tabpanel" aria-labelledby={`tab-${category}`} tabIndex={0}>
-      {menu[category].map((item, index) => <Fragment key={item[0]}>{heading(index) && <h2 className="menu-group-heading">{t(heading(index))}</h2>}{category === 'donuts' ? <DonutCard item={item} index={index} /> : <DrinkCard item={item} category={category} selectedSize={sizes[item[0]]} onSizeChange={selectSize} />}</Fragment>)}
+      {groups.map(([heading, items]) => <Fragment key={heading || category}>{heading && <h2 className="menu-group-heading">{t(heading)}</h2>}{[...items].sort((a, b) => priceFor(a) - priceFor(b)).map((item, index) => category === 'donuts' ? <DonutCard key={item[0]} item={item} index={index} /> : <DrinkCard key={item[0]} item={item} category={category} selectedSize={sizes[item[0]]} onSizeChange={selectSize} />)}</Fragment>)}
     </div>
   </>;
 }

@@ -3,6 +3,8 @@ import { supabase } from '../../lib/supabase';
 import { menu } from '../../components/menu/menuData';
 import { validFeatured } from '../../lib/featuredProducts';
 
+const donutOptions = [...menu.donuts].sort((a, b) => Number(a[1]) - Number(b[1]));
+
 export default function AdminFeatured({ role }) {
   const [saved, setSaved] = useState(null);
   const [photos, setPhotos] = useState([]);
@@ -53,7 +55,7 @@ export default function AdminFeatured({ role }) {
         <span>الصنف {index + 1}</span>
         <img src={`/assets/donuts/${photo}`} alt="" />
         <select value={photo} disabled={!allowed || busy || !saved} onChange={event => { setPhotos(current => current.map((value, slot) => slot === index ? event.target.value : value)); setMessage(''); }}>
-          {menu.donuts.map(([name, price, image]) => <option key={image} value={image}>{name} — {price} ₪</option>)}
+          {donutOptions.map(([name, price, image]) => <option key={image} value={image}>{name} — {price} ₪</option>)}
         </select>
       </label>)}</div>
       {photos.length > 0 && !validFeatured(photos) && <p role="alert">اختر أربعة أصناف مختلفة دون تكرار.</p>}

@@ -47,14 +47,18 @@ function OrderStatus({ order }) {
     completed: en ? `Your order has been completed (${delivery ? 'delivery' : 'pickup'}). Thank you!` : `تم إكمال طلبك (${delivery ? 'توصيل' : 'استلام من الفرع'}). شكرًا لك!`,
     cancelled: en ? 'Your order has been cancelled.' : 'تم إلغاء طلبك.',
   };
+  const steps = en ? ['Sent', 'Preparing', delivery ? 'Ready for delivery' : 'Ready for pickup', 'Completed'] : ['تم الإرسال', 'قيد التحضير', delivery ? 'جاهز للتوصيل' : 'جاهز للاستلام', 'مكتمل'];
+  const stepIndex = ['new', 'preparing', 'ready', 'completed'].indexOf(order.status);
   const Icon = order.status === 'cancelled' ? CancelOutlinedIcon : ['ready', 'completed'].includes(order.status) ? CheckCircleOutlineIcon : AccessTimeIcon;
   return <article className={`order-status order-status-${order.status}`} aria-label={`${en ? 'Order' : 'الطلب'} ${order.order_number}`}>
-    <Icon className="order-status-icon" />
+    <div className="order-status-symbol"><Icon className="order-status-icon" /></div>
     <div className="order-status-content">
+      <span className="tracking-eyebrow">{en ? "A little happiness is on its way" : "طلبك الحلو… خطوة بخطوة"}</span>
       <h2>{en ? 'Track your order' : 'متابعة طلبك'} <bdi>{order.order_number}</bdi></h2>
       <p role="status" aria-live="polite" aria-atomic="true">{messages[order.status]}</p>
       <small>{en ? order.branch_name_en : order.branch_name_ar} · {order.total} ₪ · {delivery ? (en ? 'Delivery' : 'توصيل') : (en ? 'Pickup' : 'استلام من الفرع')}</small>
-      {!final && <small className="tracking-hint">{en ? 'Status updates automatically every 5 seconds.' : 'تتحدّث حالة الطلب تلقائيًا كل 5 ثوانٍ.'}</small>}
+      {order.status !== 'cancelled' && <ol className="tracking-steps" aria-label={en ? 'Order progress' : 'مراحل الطلب'}>{steps.map((label, index) => <li key={label} className={index < stepIndex ? 'is-done' : index === stepIndex ? 'is-current' : ''} aria-current={index === stepIndex ? 'step' : undefined}><span className="tracking-step-dot" aria-hidden="true">{index < stepIndex ? '✓' : index + 1}</span><span>{label}</span></li>)}</ol>}
+      {!final && <small className="tracking-hint">{en ? 'We’ll keep you updated automatically.' : 'خليك معنا، حالة طلبك بتتحدّث تلقائيًا.'}</small>}
       {error && <div className="tracking-error" role="alert"><p>{error === 'missing' ? (en ? 'This order could not be found. Contact the branch with your order number.' : 'تعذّر العثور على الطلب. تواصل مع الفرع مع ذكر رقم طلبك.') : (en ? 'Unable to refresh the status. Showing the last known update; reconnecting automatically.' : 'تعذّر تحديث الحالة. نعرض آخر حالة معروفة ونحاول الاتصال مجددًا.')}</p><button type="button" onClick={() => setRevision(value => value + 1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div>}
     </div>
     {final && <button type="button" className="tracking-dismiss" onClick={() => dismissOrder(order.requestId)}>{en ? 'Dismiss' : 'إخفاء'}</button>}

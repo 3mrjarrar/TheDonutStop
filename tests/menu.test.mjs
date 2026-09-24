@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { menu, donutDescriptions, coldDrinkDescriptions } from '../src/components/menu/menuData.js';
 test('every menu item retains its asset, price and bilingual description', () => {
-  assert.deepEqual(Object.fromEntries(Object.entries(menu).map(([key, rows]) => [key, rows.length])), { donuts: 34, hot: 20, cold: 27, blends: 10 });
+  assert.deepEqual(Object.fromEntries(Object.entries(menu).map(([key, rows]) => [key, rows.length])), { donuts: 38, hot: 22, cold: 29, blends: 10 });
   for (const [category, rows] of Object.entries(menu)) for (const [name, price, photo] of rows) {
     assert.ok(typeof price === 'number' ? price > 0 : /^S \d+ \/ L \d+$/.test(price));
     const image = category === 'donuts' ? `donuts/${photo}` : `${category === 'hot' ? 'hot-drinks' : 'cold-drinks'}/${name}.png`;

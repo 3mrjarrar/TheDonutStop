@@ -12,6 +12,16 @@ import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 const categories = [['donuts', 'دونات', 'Donuts'], ['hot', 'مشروبات ساخنة', 'Hot drinks'], ['cold', 'مشروبات باردة', 'Cold drinks'], ['blends', 'سموذي وفرابيه', 'Smoothies & frappes']];
 const storageKey = 'donut-stop-branch';
 
+function productVariants(product) {
+  return [...product.variants].sort((a, b) => ({ S: 0, L: 1 }[a.product_variants.size] ?? 0) - ({ S: 0, L: 1 }[b.product_variants.size] ?? 0));
+}
+
+function startingPrice(product) {
+  const variants = productVariants(product);
+  const row = variants[0];
+  return Number(row.price_override ?? row.product_variants.price);
+}
+
 export default function BranchMenu() {
   const { language } = useLanguage();
   const en = language === 'en';
@@ -103,8 +113,8 @@ export default function BranchMenu() {
     {error ? <div role="alert"><p>{en ? 'We could not load availability. Please try again.' : 'تعذّر تحميل التوفر. يرجى المحاولة مجددًا.'}</p><button className="tab" onClick={() => setRetry(value => value + 1)}>{en ? 'Retry' : 'إعادة المحاولة'}</button></div> : loading ? <p role="status">{en ? 'Loading…' : 'جارٍ التحميل…'}</p> : branch ? <>
       <div className="tabs" role="group" aria-label={en ? 'Menu categories' : 'فئات المنيو'}>{branchCategories.map(([key, ar, english]) => <button type="button" className={`tab${category === key ? ' active' : ''}`} aria-pressed={category === key} key={key} onClick={() => setCategory(key)}>{en ? english : ar}</button>)}</div>
       <div id="menu-list" className={`menu-grid ${category === 'donuts' ? 'donut-grid' : 'hot-drink-grid'}`}>
-        {[...products.values()].sort((a, b) => a.sort_order - b.sort_order).map((product, index) => {
-          const variants = product.variants.sort((a, b) => ({ S: 0, L: 1 }[a.product_variants.size] ?? 0) - ({ S: 0, L: 1 }[b.product_variants.size] ?? 0));
+        {[...products.values()].sort((a, b) => startingPrice(a) - startingPrice(b) || a.sort_order - b.sort_order).map((product, index) => {
+          const variants = productVariants(product);
           const row = variants.find(item => item.product_variants.id === sizes[product.id]) || variants[0];
           const variant = row.product_variants;
           const available = isAvailable(product.category, row);
