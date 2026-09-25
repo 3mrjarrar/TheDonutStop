@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { supabase } from '../../lib/supabase';
 import './Admin.css';
 import Orders from './Orders';
+import useOrderSound from './useOrderSound';
 import InventoryEditor from './InventoryEditor';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
@@ -25,6 +26,7 @@ export default function Admin() {
   const { language } = useLanguage();
   const authCopy = (ar, en) => language === 'en' ? en : ar;
   const [session, setSession] = useState(null);
+  const orderSound = useOrderSound(session?.user.id);
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState(null);
   const [branches, setBranches] = useState([]);
@@ -210,7 +212,7 @@ export default function Admin() {
     <>
       {profile && <section className="admin-branch-bar"><div><strong>مرحبًا، {profile.name}</strong><p>إدارة يومك، من الطلب إلى التسليم.</p></div>{!['offers', 'featured'].includes(section) && <label>الفرع<select value={branch} disabled={busy} onChange={event => { setBranch(event.target.value); setEdit(null); setRows([]); setSearch(''); setMessage(''); setNotice(null); setNewCount(0); }}>{branches.map(item => <option value={item.id} key={item.id}>{item.name_ar}</option>)}</select></label>}{!branches.length && <p>لا يوجد فرع مخصص لهذا الحساب.</p>}</section>}
       {notice && <div className="admin-notification" role="alert"><NotificationsActiveOutlinedIcon /><div><strong>وصل طلب جديد!</strong><p>{notice.count > 1 ? `${notice.count} طلبات جديدة` : notice.number}</p></div><button onClick={() => { setSection('orders'); setNotice(null); }}>عرض الطلبات</button><button className="secondary" aria-label="إغلاق الإشعار" onClick={() => setNotice(null)}>إغلاق</button></div>}
-      {profile && branch && <div hidden={section !== 'orders'}><Orders key={branch} branch={branch} branches={branches} role={profile.role} onOrders={handleOrders} onChange={() => setRevision(value => value + 1)} /></div>}
+      {profile && branch && <div hidden={section !== 'orders'}><Orders key={branch} sound={orderSound} branch={branch} branches={branches} role={profile.role} onOrders={handleOrders} onChange={() => setRevision(value => value + 1)} /></div>}
       {profile && section === 'featured' && <AdminFeatured role={profile.role} />}
       {profile && section === 'offers' && <AdminOffers role={profile.role} />}
       {section === 'inventory' && <>
